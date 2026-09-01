@@ -98,14 +98,16 @@ function loginPage(message = "") {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dad Care Log</title>
+<title>Dad Care Log · 爸爸照护记录</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
          background:#f6f7f8; color:#1f2937; }
   .card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:28px;
           width:min(360px, calc(100vw - 32px)); box-shadow:0 1px 3px rgba(0,0,0,.06); }
-  h1 { margin:0 0 6px; font-size:20px; }
+  h1 { margin:0 0 2px; font-size:20px; }
+  .zh-title { font-size:15px; color:#6b7280; margin-bottom:10px; }
+  .zh { color:#6b7280; }
   p { margin:0 0 20px; color:#6b7280; font-size:14px; }
   label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
   input { width:100%; box-sizing:border-box; padding:11px 12px; font-size:16px;
@@ -119,11 +121,12 @@ function loginPage(message = "") {
 <body>
   <form class="card" method="POST" action="/login">
     <h1>Dad Care Log</h1>
-    <p>Enter the family password to continue.</p>
+    <div class="zh-title">爸爸照护记录</div>
+    <p>Enter the family password to continue.<br><span class="zh">请输入家庭密码以继续。</span></p>
     ${message ? `<div class="err">${message}</div>` : ""}
-    <label for="password">Password</label>
+    <label for="password">Password · 密码</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required>
-    <button type="submit">Sign in</button>
+    <button type="submit">Sign in · 登录</button>
   </form>
 </body>
 </html>`,
@@ -147,7 +150,7 @@ export default {
         const supplied = String(form.get("password") || "");
 
         if (!(await passwordMatches(supplied, env.SITE_PASSWORD))) {
-          return loginPage("That password is not correct.");
+          return loginPage("That password is not correct. · 密码不正确。");
         }
 
         return new Response(null, {
