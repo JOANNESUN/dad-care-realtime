@@ -81,32 +81,12 @@
     <div id="liveStatus" class="live"><span class="dot"></span><span>Connecting…</span></div>
   </div>
 
-  <div class="card">
-    <h2>Add a record</h2>
-    <div class="grid">
-      <div><label>Date</label><input id="date" type="date"></div>
-      <div><label>Time</label><input id="time" type="time"></div>
-      <div>
-        <label>Record type</label>
-        <select id="type" onchange="updatePlaceholder()">
-          <option>Food / Drink</option>
-          <option>Medicine</option>
-          <option>IV / Treatment</option>
-          <option>Temperature</option>
-          <option>Sleep / Rest</option>
-          <option>Symptoms</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div><label>Amount / dose / value (optional)</label><input id="amount" type="text"></div>
-      <div class="full"><label>What happened?</label><textarea id="detail"></textarea></div>
-      <div class="full"><label>Extra notes (optional)</label><input id="notes" type="text"></div>
+  <div class="card" style="border-left:4px solid #d97706; background:#fffaf3;">
+    <h2>Public view</h2>
+    <div class="subtitle" style="margin-bottom:0;">Anyone with the link can view live updates. Family editors can sign in to add or delete records.</div>
+    <div class="actions" style="margin-top:12px;">
+      <a href="/editor.html" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);">Family editor sign-in</a>
     </div>
-    <div class="actions">
-      <button id="saveBtn" class="primary" onclick="addEntry()">Add to timeline</button>
-      <button class="secondary" onclick="fillCurrentTime()">Use current time</button>
-    </div>
-    <div id="formError" class="error"></div>
   </div>
 
   <div class="card">
@@ -566,12 +546,10 @@ function renderTimeline(){
             <div class="event-card">
               <div class="event-top">
                 <div class="event-type">${escapeHtml(record.type)}</div>
-                <button class="secondary small" onclick="removeEntry('${record.id}')">Delete</button>
               </div>
               ${record.detail?`<div class="detail">${escapeHtml(record.detail)}</div>`:""}
               ${record.amount?`<div class="meta"><strong>Amount / dose:</strong> ${escapeHtml(record.amount)}</div>`:""}
               ${record.notes?`<div class="meta">${escapeHtml(record.notes)}</div>`:""}
-              ${record.createdBy && record.createdBy!=="unknown"?`<div class="meta">Recorded by ${escapeHtml(record.createdBy)}</div>`:""}
             </div>
           </div>
         `).join("")}
@@ -598,10 +576,10 @@ function exportCSV(){
     return;
   }
 
-  const headers=["Date","Time","Type","Amount / Dose","Details","Notes","Recorded By","Created At"];
+  const headers=["Date","Time","Type","Amount / Dose","Details","Notes","Created At"];
   const rows=[...records]
     .sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
-    .map(r=>[r.date,r.time,r.type,r.amount,r.detail,r.notes,r.createdBy,r.createdAt]);
+    .map(r=>[r.date,r.time,r.type,r.amount,r.detail,r.notes,r.createdAt]);
 
   const csv=[headers,...rows].map(row=>row.map(csvEscape).join(",")).join("\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
@@ -615,8 +593,6 @@ function exportCSV(){
   URL.revokeObjectURL(url);
 }
 
-fillCurrentTime();
-updatePlaceholder();
 renderAll();
 
 loadRecords().catch(err=>{

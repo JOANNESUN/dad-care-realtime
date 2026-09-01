@@ -19,10 +19,12 @@
     ]
   },
 
-  "exports": {
-    "CareRoom": {
-      "type": "durable-object",
-      "storage": "sqlite"
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "CareRoom"
+      ]
     }
-  }
+  ]
 }

@@ -21,9 +21,25 @@ function getUserEmail(request) {
   return request.headers.get("cf-access-authenticated-user-email") || "unknown";
 }
 
+function requireEditorAccess(request) {
+  const email = request.headers.get("cf-access-authenticated-user-email");
+  if (!email) {
+    return { ok: false, error: "Editor access required" };
+  }
+  return { ok: true, email };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/editor" || url.pathname === "/editor.html") {
+      const access = requireEditorAccess(request);
+      if (!access.ok) {
+        return json({ error: access.error }, 403);
+      }
+      return env.ASSETS.fetch(new Request(new URL("/editor.html", request.url), request));
+    }
 
     if (url.pathname.startsWith("/api/") || url.pathname === "/ws") {
       const id = env.CARE_ROOM.idFromName("dad-care-room");
@@ -53,7 +69,6 @@ export class CareRoom extends DurableObject {
         amount TEXT NOT NULL DEFAULT '',
         detail TEXT NOT NULL DEFAULT '',
         notes TEXT NOT NULL DEFAULT '',
-        created_by TEXT NOT NULL DEFAULT 'unknown',
         created_at TEXT NOT NULL
       );
 
@@ -79,7 +94,7 @@ export class CareRoom extends DurableObject {
 
     if (url.pathname.startsWith("/api/records/") && request.method === "DELETE") {
       const id = decodeURIComponent(url.pathname.slice("/api/records/".length));
-      return this.deleteRecord(id);
+      return this.deleteRecord(id, request);
     }
 
     return json({ error: "Not found" }, 404);
@@ -95,7 +110,6 @@ export class CareRoom extends DurableObject {
         amount,
         detail,
         notes,
-        created_by AS createdBy,
         created_at AS createdAt
       FROM records
       ORDER BY date DESC, time DESC, created_at DESC
@@ -105,6 +119,11 @@ export class CareRoom extends DurableObject {
   }
 
   async createRecord(request) {
+    const access = requireEditorAccess(request);
+    if (!access.ok) {
+      return json({ error: access.error }, 403);
+    }
+
     let body;
 
     try {
@@ -144,14 +163,13 @@ export class CareRoom extends DurableObject {
       amount,
       detail,
       notes,
-      createdBy: request.headers.get("x-care-user-email") || "unknown",
       createdAt: new Date().toISOString(),
     };
 
     this.ctx.storage.sql.exec(
       `INSERT INTO records
-       (id, date, time, type, amount, detail, notes, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, date, time, type, amount, detail, notes, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       record.id,
       record.date,
       record.time,
@@ -159,7 +177,6 @@ export class CareRoom extends DurableObject {
       record.amount,
       record.detail,
       record.notes,
-      record.createdBy,
       record.createdAt
     );
 
@@ -167,7 +184,12 @@ export class CareRoom extends DurableObject {
     return json(record, 201);
   }
 
-  deleteRecord(id) {
+  deleteRecord(id, request) {
+    const access = requireEditorAccess(request);
+    if (!access.ok) {
+      return json({ error: access.error }, 403);
+    }
+
     if (!id) return json({ error: "Missing id" }, 400);
 
     this.ctx.storage.sql.exec("DELETE FROM records WHERE id = ?", id);

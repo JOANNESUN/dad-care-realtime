@@ -30,9 +30,9 @@ npm run deploy
 
 Wrangler prints the deployed URL.
 
-## Restrict access to the six family members
+## Restrict write access to the six family members
 
-Because this contains private health information, protect the Worker with Cloudflare Access.
+The public page is intentionally read-only. Only the six approved family members have a protected editor page.
 
 In Cloudflare:
 
@@ -42,9 +42,7 @@ In Cloudflare:
 4. Create an **Allow** policy containing only the six approved email addresses.
 5. Use a login method such as **One-time PIN** if convenient.
 
-Each approved person signs in with their own email.
-
-The application records the authenticated email with each entry so the timeline can show who recorded it.
+The app does not display or store which family member created a record.
 
 ## Local development
 
