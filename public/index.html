@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dad Care Log</title>
+  <title data-i18n="pageTitle">Dad Care Log</title>
   <style>
     :root {
       --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
@@ -14,6 +14,8 @@
     body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
     .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .topline-right { display:flex; align-items:center; gap:10px; }
+    .lang-toggle { padding:6px 12px; font-size:13px; border-radius:999px; cursor:pointer; }
     h1 { margin:0 0 4px; font-size:28px; }
     h2 { font-size:18px; margin:0 0 12px; }
     .subtitle,.meta,.footer-note { color:var(--muted); }
@@ -75,77 +77,81 @@
 <div class="container">
   <div class="topline">
     <div>
-      <h1>Dad Care Log</h1>
-      <div class="subtitle">Shared live record for meals, medicines, IV treatment, temperature, sleep and symptoms.</div>
+      <h1 data-i18n="appTitle">Dad Care Log</h1>
+      <div class="subtitle" data-i18n="subtitle">Shared live record for meals, medicines, IV treatment, temperature, sleep and symptoms.</div>
     </div>
-    <div id="liveStatus" class="live"><span class="dot"></span><span>Connecting…</span></div>
+    <div class="topline-right">
+      <button id="langToggle" class="secondary lang-toggle" onclick="I18N.toggle()">中文</button>
+      <div id="liveStatus" class="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
+    </div>
   </div>
 
   <div class="card" style="border-left:4px solid #d97706; background:#fffaf3;">
-    <h2>Family access</h2>
-    <div class="subtitle" style="margin-bottom:0;">Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.</div>
+    <h2 data-i18n="familyAccess">Family access</h2>
+    <div class="subtitle" style="margin-bottom:0;" data-i18n="familyAccessDesc">Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.</div>
     <div class="actions" style="margin-top:12px;">
-      <a href="/editor" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);">Add or delete records</a>
-      <a href="/logout" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--muted);">Sign out</a>
+      <a href="/editor" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="addDeleteRecords">Add or delete records</a>
+      <a href="/logout" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--muted);" data-i18n="signOut">Sign out</a>
     </div>
   </div>
 
   <div class="card">
     <div class="toolbar">
       <div class="view-tabs">
-        <button id="todayTab" class="secondary tab active" onclick="setView('today')">Today</button>
-        <button id="weekTab" class="secondary tab" onclick="setView('week')">Week</button>
-        <button id="monthTab" class="secondary tab" onclick="setView('month')">Month</button>
+        <button id="todayTab" class="secondary tab active" onclick="setView('today')" data-i18n="today">Today</button>
+        <button id="weekTab" class="secondary tab" onclick="setView('week')" data-i18n="week">Week</button>
+        <button id="monthTab" class="secondary tab" onclick="setView('month')" data-i18n="month">Month</button>
       </div>
       <div class="period-controls">
         <button class="secondary" onclick="movePeriod(-1)">‹</button>
         <div id="periodLabel" class="period-label"></div>
         <button class="secondary" onclick="movePeriod(1)">›</button>
-        <button class="secondary" onclick="goToday()">Today</button>
+        <button class="secondary" onclick="goToday()" data-i18n="today">Today</button>
       </div>
     </div>
 
     <div class="summary-grid">
-      <div class="summary-box"><div class="summary-label">Food / drink</div><div id="foodCount" class="summary-value">0</div></div>
-      <div class="summary-box"><div class="summary-label">Medicine</div><div id="medicineCount" class="summary-value">0</div></div>
-      <div class="summary-box"><div class="summary-label">IV / treatment</div><div id="ivCount" class="summary-value">0</div></div>
-      <div class="summary-box"><div class="summary-label">Temperature checks</div><div id="tempCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label" data-i18n="sumFood">Food / drink</div><div id="foodCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label" data-i18n="sumMedicine">Medicine</div><div id="medicineCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label" data-i18n="sumIv">IV / treatment</div><div id="ivCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label" data-i18n="sumTemp">Temperature checks</div><div id="tempCount" class="summary-value">0</div></div>
     </div>
 
-    <h2>Temperature trend</h2>
+    <h2 data-i18n="temperatureTrend">Temperature trend</h2>
     <div id="chartContainer" class="chart-wrap"><svg id="tempChart" viewBox="0 0 900 260" preserveAspectRatio="none"></svg></div>
-    <div id="chartEmpty" class="empty" style="display:none">No temperature records in this period.</div>
+    <div id="chartEmpty" class="empty" style="display:none" data-i18n="noTemperature">No temperature records in this period.</div>
 
-    <h2 style="margin-top:18px">Daily activity</h2>
+    <h2 style="margin-top:18px" data-i18n="dailyActivity">Daily activity</h2>
     <div id="countsTableWrap"></div>
   </div>
 
   <div class="card">
     <div class="event-top">
       <div>
-        <div class="event-type">Timeline</div>
-        <div class="meta">Changes from other family members appear automatically.</div>
+        <div class="event-type" data-i18n="timeline">Timeline</div>
+        <div class="meta" data-i18n="timelineDesc">Changes from other family members appear automatically.</div>
       </div>
     </div>
 
     <div class="timeline-filters">
-      <button class="secondary filter-chip active" data-filter="All" onclick="setTimelineFilter('All')">All</button>
-      <button class="secondary filter-chip" data-filter="Food / Drink" onclick="setTimelineFilter('Food / Drink')">Food</button>
-      <button class="secondary filter-chip" data-filter="Medicine" onclick="setTimelineFilter('Medicine')">Medicine</button>
-      <button class="secondary filter-chip" data-filter="IV / Treatment" onclick="setTimelineFilter('IV / Treatment')">IV</button>
-      <button class="secondary filter-chip" data-filter="Temperature" onclick="setTimelineFilter('Temperature')">Temperature</button>
+      <button class="secondary filter-chip active" data-filter="All" onclick="setTimelineFilter('All')" data-i18n="filterAll">All</button>
+      <button class="secondary filter-chip" data-filter="Food / Drink" onclick="setTimelineFilter('Food / Drink')" data-i18n="filterFood">Food</button>
+      <button class="secondary filter-chip" data-filter="Medicine" onclick="setTimelineFilter('Medicine')" data-i18n="filterMedicine">Medicine</button>
+      <button class="secondary filter-chip" data-filter="IV / Treatment" onclick="setTimelineFilter('IV / Treatment')" data-i18n="filterIv">IV</button>
+      <button class="secondary filter-chip" data-filter="Temperature" onclick="setTimelineFilter('Temperature')" data-i18n="filterTemperature">Temperature</button>
     </div>
 
     <div id="timeline"></div>
 
     <div class="actions">
-      <button class="secondary" onclick="exportCSV()">Export CSV</button>
+      <button class="secondary" onclick="exportCSV()" data-i18n="exportCsv">Export CSV</button>
     </div>
 
-    <div class="footer-note">This page is for personal record-keeping only and is not a substitute for medical advice.</div>
+    <div class="footer-note" data-i18n="footerNote">This page is for personal record-keeping only and is not a substitute for medical advice.</div>
   </div>
 </div>
 
+<script src="/i18n.js"></script>
 <script>
 let records = [];
 let currentView = "today";
@@ -188,7 +194,7 @@ function updatePlaceholder(){
 
 async function loadRecords(){
   const res=await fetch("/api/records");
-  if(!res.ok) throw new Error("Could not load records");
+  if(!res.ok) throw new Error(I18N.t("errLoad"));
   records=await res.json();
   renderAll();
 }
@@ -214,7 +220,7 @@ async function addEntry(){
     });
 
     const data=await res.json();
-    if(!res.ok) throw new Error(data.error || "Could not save");
+    if(!res.ok) throw new Error(data.error || I18N.t("errSave"));
 
     upsertRecord(data);
     $("amount").value="";
@@ -230,12 +236,12 @@ async function addEntry(){
 }
 
 async function removeEntry(id){
-  if(!confirm("Delete this record?")) return;
+  if(!confirm(I18N.t("confirmDelete"))) return;
 
   const res=await fetch(`/api/records/${encodeURIComponent(id)}`,{method:"DELETE"});
 
   if(!res.ok){
-    alert("Could not delete record");
+    alert(I18N.t("errDelete"));
     return;
   }
 
@@ -257,7 +263,7 @@ function connectLive(){
 
   ws.onopen=()=>{
     $("liveStatus").classList.add("connected");
-    $("liveStatus").querySelector("span:last-child").textContent="Live";
+    $("liveText").textContent=I18N.t("live");
   };
 
   ws.onmessage=e=>{
@@ -280,7 +286,7 @@ function connectLive(){
 
   ws.onclose=()=>{
     $("liveStatus").classList.remove("connected");
-    $("liveStatus").querySelector("span:last-child").textContent="Reconnecting…";
+    $("liveText").textContent=I18N.t("reconnecting");
     reconnectTimer=setTimeout(connectLive,1500);
   };
 
@@ -351,16 +357,16 @@ function formatPeriodLabel(){
   const {start,end}=getPeriodRange();
 
   if(currentView==="today"){
-    return start.toLocaleDateString(undefined,{
+    return start.toLocaleDateString(I18N.locale(),{
       weekday:"short",day:"numeric",month:"short",year:"numeric"
     });
   }
 
   if(currentView==="week"){
-    return `${start.toLocaleDateString(undefined,{day:"numeric",month:"short"})} – ${end.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}`;
+    return `${start.toLocaleDateString(I18N.locale(),{day:"numeric",month:"short"})} – ${end.toLocaleDateString(I18N.locale(),{day:"numeric",month:"short",year:"numeric"})}`;
   }
 
-  return start.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  return start.toLocaleDateString(I18N.locale(),{month:"long",year:"numeric"});
 }
 
 function renderSummary(){
@@ -435,8 +441,8 @@ function renderTemperatureChart(){
     if(i%step!==0 && i!==points.length-1) return;
 
     const label=currentView==="today"
-      ? displayTimeShort(p.time)
-      : parseLocalDate(p.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+      ? I18N.displayTimeShort(p.time)
+      : parseLocalDate(p.date).toLocaleDateString(I18N.locale(),{month:"short",day:"numeric"});
 
     output.push(`<text x="${x(i)}" y="${H-18}" text-anchor="middle" font-size="11" fill="#6b7280">${escapeHtml(label)}</text>`);
   });
@@ -473,7 +479,7 @@ function renderCountsTable(){
   }
 
   if(!rows.length){
-    $("countsTableWrap").innerHTML='<div class="empty">No activity recorded in this period.</div>';
+    $("countsTableWrap").innerHTML=`<div class="empty">${escapeHtml(I18N.t("noActivity"))}</div>`;
     return;
   }
 
@@ -481,12 +487,12 @@ function renderCountsTable(){
     <div style="overflow-x:auto">
       <table class="counts-table">
         <thead>
-          <tr><th>Date</th><th>Food</th><th>Medicine</th><th>IV</th><th>Temp</th></tr>
+          <tr><th>${escapeHtml(I18N.t("thDate"))}</th><th>${escapeHtml(I18N.t("thFood"))}</th><th>${escapeHtml(I18N.t("thMedicine"))}</th><th>${escapeHtml(I18N.t("thIv"))}</th><th>${escapeHtml(I18N.t("thTemp"))}</th></tr>
         </thead>
         <tbody>
           ${rows.map(r=>`
             <tr>
-              <td>${escapeHtml(parseLocalDate(r.date).toLocaleDateString(undefined,{month:"short",day:"numeric"}))}</td>
+              <td>${escapeHtml(parseLocalDate(r.date).toLocaleDateString(I18N.locale(),{month:"short",day:"numeric"}))}</td>
               <td>${r.food}</td>
               <td>${r.medicine}</td>
               <td>${r.iv}</td>
@@ -498,20 +504,8 @@ function renderCountsTable(){
     </div>`;
 }
 
-function displayTime(time){
-  const [h,m]=time.split(":").map(Number);
-  const period=h>=12 ? "pm" : "am";
-  return `${h%12||12}:${String(m).padStart(2,"0")} ${period}`;
-}
-
-function displayTimeShort(time){
-  const [h,m]=time.split(":").map(Number);
-  const period=h>=12 ? "pm" : "am";
-  return `${h%12||12}${m?":"+String(m).padStart(2,"0"):""}${period}`;
-}
-
 function formatDate(dateString){
-  return parseLocalDate(dateString).toLocaleDateString(undefined,{
+  return parseLocalDate(dateString).toLocaleDateString(I18N.locale(),{
     weekday:"long",year:"numeric",month:"long",day:"numeric"
   });
 }
@@ -526,7 +520,7 @@ function renderTimeline(){
   entries.sort((a,b)=>`${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
 
   if(!entries.length){
-    $("timeline").innerHTML='<div class="empty">No records in this period.</div>';
+    $("timeline").innerHTML=`<div class="empty">${escapeHtml(I18N.t("noRecords"))}</div>`;
     return;
   }
 
@@ -543,13 +537,13 @@ function renderTimeline(){
       <div class="timeline">
         ${grouped[date].map(record=>`
           <div class="entry">
-            <div class="time">${escapeHtml(displayTime(record.time))}</div>
+            <div class="time">${escapeHtml(I18N.displayTime(record.time))}</div>
             <div class="event-card">
               <div class="event-top">
-                <div class="event-type">${escapeHtml(record.type)}</div>
+                <div class="event-type">${escapeHtml(I18N.typeLabel(record.type))}</div>
               </div>
               ${record.detail?`<div class="detail">${escapeHtml(record.detail)}</div>`:""}
-              ${record.amount?`<div class="meta"><strong>Amount / dose:</strong> ${escapeHtml(record.amount)}</div>`:""}
+              ${record.amount?`<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>`:""}
               ${record.notes?`<div class="meta">${escapeHtml(record.notes)}</div>`:""}
             </div>
           </div>
@@ -573,11 +567,11 @@ function csvEscape(value){
 
 function exportCSV(){
   if(!records.length){
-    alert("No records to export.");
+    alert(I18N.t("nothingToExport"));
     return;
   }
 
-  const headers=["Date","Time","Type","Amount / Dose","Details","Notes","Created At"];
+  const headers=I18N.t("csvHeaders");
   const rows=[...records]
     .sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
     .map(r=>[r.date,r.time,r.type,r.amount,r.detail,r.notes,r.createdAt]);
@@ -593,6 +587,9 @@ function exportCSV(){
 
   URL.revokeObjectURL(url);
 }
+
+window.onLanguageChange=renderAll;
+I18N.applyStatic();
 
 renderAll();
 

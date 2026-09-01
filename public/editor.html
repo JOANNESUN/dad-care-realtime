@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dad Care Log — Editor</title>
+  <title data-i18n="editorPageTitle">Dad Care Log — Editor</title>
   <style>
     :root {
       --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
@@ -40,6 +40,8 @@
     .error { color:#991b1b; margin-top:10px; font-size:13px; }
     .status { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; font-size:13px; background:var(--good-bg); color:var(--good); }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    .topline-right { display:flex; align-items:center; gap:10px; }
+    .lang-toggle { padding:6px 12px; font-size:13px; border-radius:999px; cursor:pointer; }
     @media(max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
@@ -47,47 +49,51 @@
 <div class="container">
   <div class="topline">
     <div>
-      <h1>Dad Care Log</h1>
-      <div class="subtitle">Family editor access</div>
+      <h1 data-i18n="appTitle">Dad Care Log</h1>
+      <div class="subtitle" data-i18n="editorSubtitle">Family editor access</div>
     </div>
-    <div class="status"><span class="dot"></span><span>Editor access active</span></div>
+    <div class="topline-right">
+      <button id="langToggle" class="secondary lang-toggle" onclick="I18N.toggle()">中文</button>
+      <div class="status"><span class="dot"></span><span data-i18n="editorActive">Editor access active</span></div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>Add a record</h2>
+    <h2 data-i18n="addRecord">Add a record</h2>
     <div class="grid">
-      <div><label>Date</label><input id="date" type="date"></div>
-      <div><label>Time</label><input id="time" type="time"></div>
+      <div><label data-i18n="labelDate">Date</label><input id="date" type="date"></div>
+      <div><label data-i18n="labelTime">Time</label><input id="time" type="time"></div>
       <div>
-        <label>Record type</label>
+        <label data-i18n="labelType">Record type</label>
         <select id="type" onchange="updatePlaceholder()">
-          <option>Food / Drink</option>
-          <option>Medicine</option>
-          <option>IV / Treatment</option>
-          <option>Temperature</option>
-          <option>Sleep / Rest</option>
-          <option>Symptoms</option>
-          <option>Other</option>
+          <option value="Food / Drink" data-i18n-type="Food / Drink">Food / Drink</option>
+          <option value="Medicine" data-i18n-type="Medicine">Medicine</option>
+          <option value="IV / Treatment" data-i18n-type="IV / Treatment">IV / Treatment</option>
+          <option value="Temperature" data-i18n-type="Temperature">Temperature</option>
+          <option value="Sleep / Rest" data-i18n-type="Sleep / Rest">Sleep / Rest</option>
+          <option value="Symptoms" data-i18n-type="Symptoms">Symptoms</option>
+          <option value="Other" data-i18n-type="Other">Other</option>
         </select>
       </div>
-      <div><label>Amount / dose / value (optional)</label><input id="amount" type="text"></div>
-      <div class="full"><label>What happened?</label><textarea id="detail"></textarea></div>
-      <div class="full"><label>Extra notes (optional)</label><input id="notes" type="text"></div>
+      <div><label data-i18n="labelAmount">Amount / dose / value (optional)</label><input id="amount" type="text"></div>
+      <div class="full"><label data-i18n="labelDetail">What happened?</label><textarea id="detail"></textarea></div>
+      <div class="full"><label data-i18n="labelNotes">Extra notes (optional)</label><input id="notes" type="text"></div>
     </div>
     <div class="actions">
-      <button id="saveBtn" class="primary" onclick="addEntry()">Add to timeline</button>
-      <button class="secondary" onclick="fillCurrentTime()">Use current time</button>
-      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);">Public view</a>
+      <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline">Add to timeline</button>
+      <button class="secondary" onclick="fillCurrentTime()" data-i18n="useCurrentTime">Use current time</button>
+      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="backToLog">Back to the log</a>
     </div>
     <div id="formError" class="error"></div>
   </div>
 
   <div class="card">
-    <h2>Recent care records</h2>
+    <h2 data-i18n="recentRecords">Recent care records</h2>
     <div id="entries" class="entry-list"></div>
   </div>
 </div>
 
+<script src="/i18n.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, "0");
@@ -101,27 +107,13 @@ function fillCurrentTime() {
 }
 
 function updatePlaceholder() {
-  const p = {
-    "Food / Drink": ["e.g. Ate 4 dumplings and tofu drink", "e.g. half bowl, 200 mL"],
-    "Medicine": ["e.g. Took antibiotic and stomach medicine", "e.g. 1 tablet"],
-    "IV / Treatment": ["e.g. IV fluids started", "e.g. 500 mL"],
-    "Temperature": ["e.g. Fever has subsided", "e.g. 37.2°C"],
-    "Sleep / Rest": ["e.g. Started afternoon nap", "e.g. slept 1 hour"],
-    "Symptoms": ["e.g. Mild nausea, no vomiting", "e.g. mild / moderate"],
-    "Other": ["e.g. Doctor visit or general observation", "optional"]
-  };
-  $("detail").placeholder = p[$("type").value][0];
-  $("amount").placeholder = p[$("type").value][1];
+  const [detail, amount] = I18N.placeholders($("type").value);
+  $("detail").placeholder = detail;
+  $("amount").placeholder = amount;
 }
 
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-}
-
-function displayTime(time) {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "pm" : "am";
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
 async function addEntry() {
@@ -144,7 +136,7 @@ async function addEntry() {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not save");
+    if (!res.ok) throw new Error(data.error || I18N.t("errSave"));
 
     $("amount").value = "";
     $("detail").value = "";
@@ -159,11 +151,11 @@ async function addEntry() {
 }
 
 async function deleteEntry(id) {
-  if (!confirm("Delete this record?")) return;
+  if (!confirm(I18N.t("confirmDelete"))) return;
   const res = await fetch(`/api/records/${encodeURIComponent(id)}`, { method: "DELETE" });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    alert(data.error || "Could not delete record");
+    alert(data.error || I18N.t("errDelete"));
     return;
   }
   await loadRecords();
@@ -173,13 +165,13 @@ async function loadRecords() {
   const res = await fetch("/api/records");
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    $("entries").innerHTML = `<div class="empty">${escapeHtml(data.error || "Could not load records")}</div>`;
+    $("entries").innerHTML = `<div class="empty">${escapeHtml(data.error || I18N.t("errLoad"))}</div>`;
     return;
   }
 
   const records = await res.json();
   if (!records.length) {
-    $("entries").innerHTML = '<div class="empty">No records yet.</div>';
+    $("entries").innerHTML = `<div class="empty">${escapeHtml(I18N.t("noRecordsYet"))}</div>`;
     return;
   }
 
@@ -189,18 +181,24 @@ async function loadRecords() {
       <div class="entry">
         <div class="entry-head">
           <div>
-            <span class="pill">${escapeHtml(record.type)}</span>
-            <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))} at ${escapeHtml(displayTime(record.time))}</div>
+            <span class="pill">${escapeHtml(I18N.typeLabel(record.type))}</span>
+            <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { weekday: "short", month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</div>
           </div>
-          <button class="danger" onclick="deleteEntry('${record.id}')">Delete</button>
+          <button class="danger" onclick="deleteEntry('${record.id}')">${escapeHtml(I18N.t("deleteBtn"))}</button>
         </div>
         ${record.detail ? `<div class="detail">${escapeHtml(record.detail)}</div>` : ""}
-        ${record.amount ? `<div class="meta"><strong>Amount / dose:</strong> ${escapeHtml(record.amount)}</div>` : ""}
+        ${record.amount ? `<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>` : ""}
         ${record.notes ? `<div class="meta">${escapeHtml(record.notes)}</div>` : ""}
       </div>
     `).join("");
 }
 
+window.onLanguageChange = () => {
+  updatePlaceholder();
+  loadRecords();
+};
+
+I18N.applyStatic();
 fillCurrentTime();
 updatePlaceholder();
 loadRecords().catch(err => {
