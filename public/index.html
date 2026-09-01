@@ -15,7 +15,9 @@
     .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
     .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .topline-right { display:flex; align-items:center; gap:10px; }
-    .lang-toggle { padding:6px 12px; font-size:13px; border-radius:999px; cursor:pointer; }
+    .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
+    .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
+    .lang-tab.active { background:var(--accent); color:#fff; }
     h1 { margin:0 0 4px; font-size:28px; }
     h2 { font-size:18px; margin:0 0 12px; }
     .subtitle,.meta,.footer-note { color:var(--muted); }
@@ -81,7 +83,10 @@
       <div class="subtitle" data-i18n="subtitle">Shared live record for meals, medicines, IV treatment, temperature, sleep and symptoms.</div>
     </div>
     <div class="topline-right">
-      <button id="langToggle" class="secondary lang-toggle" onclick="I18N.toggle()">中文</button>
+      <div class="lang-tabs" role="group" aria-label="Language">
+        <button type="button" class="secondary lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
+        <button type="button" class="secondary lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
+      </div>
       <div id="liveStatus" class="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
     </div>
   </div>

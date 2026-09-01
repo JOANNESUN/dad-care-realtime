@@ -78,7 +78,6 @@
       nothingToExport: "No records to export.",
 
       csvHeaders: ["Date", "Time", "Type", "Amount / Dose", "Details", "Notes", "Created At"],
-      switchTo: "中文",
     },
 
     zh: {
@@ -153,7 +152,6 @@
       nothingToExport: "没有可导出的记录。",
 
       csvHeaders: ["日期", "时间", "类型", "用量 / 剂量", "详情", "备注", "创建时间"],
-      switchTo: "EN",
     },
   };
 
@@ -267,21 +265,21 @@
       const titleEl = document.querySelector("title");
       if (titleEl?.dataset.i18n) titleEl.textContent = I18N.t(titleEl.dataset.i18n);
 
-      const toggle = document.getElementById("langToggle");
-      if (toggle) toggle.textContent = I18N.t("switchTo");
+      document.querySelectorAll(".lang-tab").forEach(el => {
+        const selected = el.dataset.lang === lang;
+        el.classList.toggle("active", selected);
+        el.setAttribute("aria-pressed", String(selected));
+      });
     },
 
     setLang(next) {
+      if (next === lang) return;
       lang = next;
       try {
         localStorage.setItem(STORAGE_KEY, next);
       } catch {}
       I18N.applyStatic();
       if (typeof window.onLanguageChange === "function") window.onLanguageChange();
-    },
-
-    toggle() {
-      I18N.setLang(lang === "en" ? "zh" : "en");
     },
   };
 
