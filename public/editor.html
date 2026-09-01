@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dad Care Log — Editor</title>
+  <style>
+    :root {
+      --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#374151; --soft:#f3f4f6;
+      --danger:#991b1b; --danger-bg:#fee2e2;
+      --good:#166534; --good-bg:#dcfce7;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
+    .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0 0 4px; font-size:28px; }
+    h2 { font-size:18px; margin:0 0 12px; }
+    .subtitle,.meta,.footer-note { color:var(--muted); }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .full { grid-column:1/-1; }
+    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+    textarea { min-height:76px; resize:vertical; }
+    button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .primary { background:var(--accent); color:#fff; }
+    .secondary { background:var(--soft); color:var(--text); }
+    .danger { background:var(--danger-bg); color:var(--danger); }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    .entry-list { display:flex; flex-direction:column; gap:12px; }
+    .entry { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+    .entry-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:var(--soft); font-size:12px; font-weight:700; }
+    .detail { margin-top:8px; line-height:1.5; white-space:pre-wrap; }
+    .meta { font-size:13px; margin-top:7px; }
+    .empty { text-align:center; color:var(--muted); padding:18px 0; }
+    .error { color:#991b1b; margin-top:10px; font-size:13px; }
+    .status { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; font-size:13px; background:var(--good-bg); color:var(--good); }
+    .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    @media(max-width:720px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topline">
+    <div>
+      <h1>Dad Care Log</h1>
+      <div class="subtitle">Family editor access</div>
+    </div>
+    <div class="status"><span class="dot"></span><span>Editor access active</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Add a record</h2>
+    <div class="grid">
+      <div><label>Date</label><input id="date" type="date"></div>
+      <div><label>Time</label><input id="time" type="time"></div>
+      <div>
+        <label>Record type</label>
+        <select id="type" onchange="updatePlaceholder()">
+          <option>Food / Drink</option>
+          <option>Medicine</option>
+          <option>IV / Treatment</option>
+          <option>Temperature</option>
+          <option>Sleep / Rest</option>
+          <option>Symptoms</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div><label>Amount / dose / value (optional)</label><input id="amount" type="text"></div>
+      <div class="full"><label>What happened?</label><textarea id="detail"></textarea></div>
+      <div class="full"><label>Extra notes (optional)</label><input id="notes" type="text"></div>
+    </div>
+    <div class="actions">
+      <button id="saveBtn" class="primary" onclick="addEntry()">Add to timeline</button>
+      <button class="secondary" onclick="fillCurrentTime()">Use current time</button>
+      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);">Public view</a>
+    </div>
+    <div id="formError" class="error"></div>
+  </div>
+
+  <div class="card">
+    <h2>Recent care records</h2>
+    <div id="entries" class="entry-list"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const toDateString = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseLocalDate = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+
+function fillCurrentTime() {
+  const now = new Date();
+  $("date").value = toDateString(now);
+  $("time").value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+function updatePlaceholder() {
+  const p = {
+    "Food / Drink": ["e.g. Ate 4 dumplings and tofu drink", "e.g. half bowl, 200 mL"],
+    "Medicine": ["e.g. Took antibiotic and stomach medicine", "e.g. 1 tablet"],
+    "IV / Treatment": ["e.g. IV fluids started", "e.g. 500 mL"],
+    "Temperature": ["e.g. Fever has subsided", "e.g. 37.2°C"],
+    "Sleep / Rest": ["e.g. Started afternoon nap", "e.g. slept 1 hour"],
+    "Symptoms": ["e.g. Mild nausea, no vomiting", "e.g. mild / moderate"],
+    "Other": ["e.g. Doctor visit or general observation", "optional"]
+  };
+  $("detail").placeholder = p[$("type").value][0];
+  $("amount").placeholder = p[$("type").value][1];
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+function displayTime(time) {
+  const [h, m] = time.split(":").map(Number);
+  const period = h >= 12 ? "pm" : "am";
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+async function addEntry() {
+  $("formError").textContent = "";
+  const payload = {
+    date: $("date").value,
+    time: $("time").value,
+    type: $("type").value,
+    amount: $("amount").value.trim(),
+    detail: $("detail").value.trim(),
+    notes: $("notes").value.trim()
+  };
+
+  $("saveBtn").disabled = true;
+
+  try {
+    const res = await fetch("/api/records", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not save");
+
+    $("amount").value = "";
+    $("detail").value = "";
+    $("notes").value = "";
+    fillCurrentTime();
+    await loadRecords();
+  } catch (err) {
+    $("formError").textContent = err.message;
+  } finally {
+    $("saveBtn").disabled = false;
+  }
+}
+
+async function deleteEntry(id) {
+  if (!confirm("Delete this record?")) return;
+  const res = await fetch(`/api/records/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error || "Could not delete record");
+    return;
+  }
+  await loadRecords();
+}
+
+async function loadRecords() {
+  const res = await fetch("/api/records");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    $("entries").innerHTML = `<div class="empty">${escapeHtml(data.error || "Could not load records")}</div>`;
+    return;
+  }
+
+  const records = await res.json();
+  if (!records.length) {
+    $("entries").innerHTML = '<div class="empty">No records yet.</div>';
+    return;
+  }
+
+  $("entries").innerHTML = records
+    .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`))
+    .map(record => `
+      <div class="entry">
+        <div class="entry-head">
+          <div>
+            <span class="pill">${escapeHtml(record.type)}</span>
+            <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }))} at ${escapeHtml(displayTime(record.time))}</div>
+          </div>
+          <button class="danger" onclick="deleteEntry('${record.id}')">Delete</button>
+        </div>
+        ${record.detail ? `<div class="detail">${escapeHtml(record.detail)}</div>` : ""}
+        ${record.amount ? `<div class="meta"><strong>Amount / dose:</strong> ${escapeHtml(record.amount)}</div>` : ""}
+        ${record.notes ? `<div class="meta">${escapeHtml(record.notes)}</div>` : ""}
+      </div>
+    `).join("");
+}
+
+fillCurrentTime();
+updatePlaceholder();
+loadRecords().catch(err => {
+  $("entries").innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
+});
+</script>
+</body>
+</html>
