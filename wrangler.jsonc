@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dad-care-log",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/ws"]
+  },
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CARE_ROOM",
+        "class_name": "CareRoom"
+      }
+    ]
+  },
+
+  "exports": {
+    "CareRoom": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  }
+}

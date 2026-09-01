@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dad Care Log</title>
+  <style>
+    :root {
+      --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
+      --line:#e5e7eb; --accent:#374151; --soft:#f3f4f6;
+      --good:#166534; --good-bg:#dcfce7; --warn:#92400e; --warn-bg:#fef3c7;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
+    .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    h1 { margin:0 0 4px; font-size:28px; }
+    h2 { font-size:18px; margin:0 0 12px; }
+    .subtitle,.meta,.footer-note { color:var(--muted); }
+    .subtitle { margin-bottom:22px; }
+    .live { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; font-size:13px; background:var(--warn-bg); color:var(--warn); height:fit-content; }
+    .live.connected { background:var(--good-bg); color:var(--good); }
+    .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .full { grid-column:1/-1; }
+    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+    textarea { min-height:76px; resize:vertical; }
+    button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .primary { background:var(--accent); color:#fff; }
+    .secondary { background:var(--soft); color:var(--text); }
+    .actions,.view-tabs,.period-controls,.timeline-filters { display:flex; gap:8px; flex-wrap:wrap; }
+    .actions { margin-top:14px; }
+    .toolbar { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .tab.active,.filter-chip.active { background:var(--accent); color:#fff; }
+    .period-controls { align-items:center; }
+    .period-label { min-width:180px; text-align:center; font-weight:700; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
+    .summary-box { border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .summary-label { color:var(--muted); font-size:12px; margin-bottom:5px; }
+    .summary-value { font-size:22px; font-weight:700; }
+    .chart-wrap { overflow-x:auto; }
+    #tempChart { width:100%; min-width:560px; height:260px; display:block; }
+    .counts-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .counts-table th,.counts-table td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:left; }
+    .counts-table th { color:var(--muted); font-weight:600; }
+    .timeline-filters { margin:10px 0 4px; }
+    .day-group { margin-top:18px; }
+    .day-title { font-size:18px; font-weight:700; padding-bottom:10px; border-bottom:1px solid var(--line); }
+    .timeline { position:relative; margin-left:7px; }
+    .timeline::before { content:""; position:absolute; left:55px; top:0; bottom:0; width:2px; background:var(--line); }
+    .entry { position:relative; display:grid; grid-template-columns:48px 1fr; gap:22px; padding:14px 0; }
+    .entry::before { content:""; position:absolute; left:50px; top:24px; width:12px; height:12px; border-radius:50%; background:var(--accent); border:3px solid white; box-shadow:0 0 0 1px var(--line); }
+    .time { color:var(--muted); font-size:13px; text-align:right; padding-top:5px; }
+    .event-card { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+    .event-top { display:flex; justify-content:space-between; gap:10px; }
+    .event-type { font-weight:700; }
+    .detail { margin-top:6px; line-height:1.45; white-space:pre-wrap; }
+    .meta { font-size:13px; margin-top:7px; }
+    .small { padding:6px 9px; font-size:12px; }
+    .empty { text-align:center; color:var(--muted); padding:24px 0; }
+    .error { color:#991b1b; margin-top:10px; font-size:13px; }
+    .footer-note { font-size:12px; line-height:1.5; margin-top:14px; }
+    @media(max-width:720px){
+      .grid{grid-template-columns:1fr}.full{grid-column:auto}
+      .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .period-label{min-width:130px;text-align:left}
+      .timeline::before{left:47px}.entry{grid-template-columns:40px 1fr;gap:20px}.entry::before{left:42px}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="topline">
+    <div>
+      <h1>Dad Care Log</h1>
+      <div class="subtitle">Shared live record for meals, medicines, IV treatment, temperature, sleep and symptoms.</div>
+    </div>
+    <div id="liveStatus" class="live"><span class="dot"></span><span>Connecting…</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Add a record</h2>
+    <div class="grid">
+      <div><label>Date</label><input id="date" type="date"></div>
+      <div><label>Time</label><input id="time" type="time"></div>
+      <div>
+        <label>Record type</label>
+        <select id="type" onchange="updatePlaceholder()">
+          <option>Food / Drink</option>
+          <option>Medicine</option>
+          <option>IV / Treatment</option>
+          <option>Temperature</option>
+          <option>Sleep / Rest</option>
+          <option>Symptoms</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div><label>Amount / dose / value (optional)</label><input id="amount" type="text"></div>
+      <div class="full"><label>What happened?</label><textarea id="detail"></textarea></div>
+      <div class="full"><label>Extra notes (optional)</label><input id="notes" type="text"></div>
+    </div>
+    <div class="actions">
+      <button id="saveBtn" class="primary" onclick="addEntry()">Add to timeline</button>
+      <button class="secondary" onclick="fillCurrentTime()">Use current time</button>
+    </div>
+    <div id="formError" class="error"></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="view-tabs">
+        <button id="todayTab" class="secondary tab active" onclick="setView('today')">Today</button>
+        <button id="weekTab" class="secondary tab" onclick="setView('week')">Week</button>
+        <button id="monthTab" class="secondary tab" onclick="setView('month')">Month</button>
+      </div>
+      <div class="period-controls">
+        <button class="secondary" onclick="movePeriod(-1)">‹</button>
+        <div id="periodLabel" class="period-label"></div>
+        <button class="secondary" onclick="movePeriod(1)">›</button>
+        <button class="secondary" onclick="goToday()">Today</button>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-box"><div class="summary-label">Food / drink</div><div id="foodCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label">Medicine</div><div id="medicineCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label">IV / treatment</div><div id="ivCount" class="summary-value">0</div></div>
+      <div class="summary-box"><div class="summary-label">Temperature checks</div><div id="tempCount" class="summary-value">0</div></div>
+    </div>
+
+    <h2>Temperature trend</h2>
+    <div id="chartContainer" class="chart-wrap"><svg id="tempChart" viewBox="0 0 900 260" preserveAspectRatio="none"></svg></div>
+    <div id="chartEmpty" class="empty" style="display:none">No temperature records in this period.</div>
+
+    <h2 style="margin-top:18px">Daily activity</h2>
+    <div id="countsTableWrap"></div>
+  </div>
+
+  <div class="card">
+    <div class="event-top">
+      <div>
+        <div class="event-type">Timeline</div>
+        <div class="meta">Changes from other family members appear automatically.</div>
+      </div>
+    </div>
+
+    <div class="timeline-filters">
+      <button class="secondary filter-chip active" data-filter="All" onclick="setTimelineFilter('All')">All</button>
+      <button class="secondary filter-chip" data-filter="Food / Drink" onclick="setTimelineFilter('Food / Drink')">Food</button>
+      <button class="secondary filter-chip" data-filter="Medicine" onclick="setTimelineFilter('Medicine')">Medicine</button>
+      <button class="secondary filter-chip" data-filter="IV / Treatment" onclick="setTimelineFilter('IV / Treatment')">IV</button>
+      <button class="secondary filter-chip" data-filter="Temperature" onclick="setTimelineFilter('Temperature')">Temperature</button>
+    </div>
+
+    <div id="timeline"></div>
+
+    <div class="actions">
+      <button class="secondary" onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <div class="footer-note">This page is for personal record-keeping only and is not a substitute for medical advice.</div>
+  </div>
+</div>
+
+<script>
+let records = [];
+let currentView = "today";
+let anchorDate = new Date();
+let timelineFilter = "All";
+let ws = null;
+let reconnectTimer = null;
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,"0");
+const toDateString = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseLocalDate = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const startOfDay = d => new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const endOfDay = d => new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59,999);
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+function escapeHtml(value){
+  return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+function fillCurrentTime(){
+  const now=new Date();
+  $("date").value=toDateString(now);
+  $("time").value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+function updatePlaceholder(){
+  const p={
+    "Food / Drink":["e.g. Ate 4 dumplings and tofu drink","e.g. half bowl, 200 mL"],
+    "Medicine":["e.g. Took antibiotic and stomach medicine","e.g. 1 tablet"],
+    "IV / Treatment":["e.g. IV fluids started","e.g. 500 mL"],
+    "Temperature":["e.g. Fever has subsided","e.g. 37.2°C"],
+    "Sleep / Rest":["e.g. Started afternoon nap","e.g. slept 1 hour"],
+    "Symptoms":["e.g. Mild nausea, no vomiting","e.g. mild / moderate"],
+    "Other":["e.g. Doctor visit or general observation","optional"]
+  };
+  $("detail").placeholder=p[$("type").value][0];
+  $("amount").placeholder=p[$("type").value][1];
+}
+
+async function loadRecords(){
+  const res=await fetch("/api/records");
+  if(!res.ok) throw new Error("Could not load records");
+  records=await res.json();
+  renderAll();
+}
+
+async function addEntry(){
+  $("formError").textContent="";
+  const payload={
+    date:$("date").value,
+    time:$("time").value,
+    type:$("type").value,
+    amount:$("amount").value.trim(),
+    detail:$("detail").value.trim(),
+    notes:$("notes").value.trim()
+  };
+
+  $("saveBtn").disabled=true;
+
+  try{
+    const res=await fetch("/api/records",{
+      method:"POST",
+      headers:{"content-type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error || "Could not save");
+
+    upsertRecord(data);
+    $("amount").value="";
+    $("detail").value="";
+    $("notes").value="";
+    fillCurrentTime();
+    renderAll();
+  }catch(err){
+    $("formError").textContent=err.message;
+  }finally{
+    $("saveBtn").disabled=false;
+  }
+}
+
+async function removeEntry(id){
+  if(!confirm("Delete this record?")) return;
+
+  const res=await fetch(`/api/records/${encodeURIComponent(id)}`,{method:"DELETE"});
+
+  if(!res.ok){
+    alert("Could not delete record");
+    return;
+  }
+
+  records=records.filter(r=>r.id!==id);
+  renderAll();
+}
+
+function upsertRecord(record){
+  const index=records.findIndex(r=>r.id===record.id);
+  if(index>=0) records[index]=record;
+  else records.push(record);
+}
+
+function connectLive(){
+  clearTimeout(reconnectTimer);
+
+  const protocol=location.protocol==="https:" ? "wss:" : "ws:";
+  ws=new WebSocket(`${protocol}//${location.host}/ws`);
+
+  ws.onopen=()=>{
+    $("liveStatus").classList.add("connected");
+    $("liveStatus").querySelector("span:last-child").textContent="Live";
+  };
+
+  ws.onmessage=e=>{
+    if(e.data==="pong") return;
+
+    try{
+      const msg=JSON.parse(e.data);
+
+      if(msg.event==="record_added"){
+        upsertRecord(msg.record);
+        renderAll();
+      }
+
+      if(msg.event==="record_deleted"){
+        records=records.filter(r=>r.id!==msg.id);
+        renderAll();
+      }
+    }catch{}
+  };
+
+  ws.onclose=()=>{
+    $("liveStatus").classList.remove("connected");
+    $("liveStatus").querySelector("span:last-child").textContent="Reconnecting…";
+    reconnectTimer=setTimeout(connectLive,1500);
+  };
+
+  ws.onerror=()=>ws.close();
+}
+
+function setView(view){
+  currentView=view;
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  $(`${view}Tab`).classList.add("active");
+  renderAll();
+}
+
+function setTimelineFilter(filter){
+  timelineFilter=filter;
+  document.querySelectorAll(".filter-chip").forEach(b=>{
+    b.classList.toggle("active",b.dataset.filter===filter);
+  });
+  renderTimeline();
+}
+
+function goToday(){
+  anchorDate=new Date();
+  renderAll();
+}
+
+function movePeriod(direction){
+  const d=new Date(anchorDate);
+
+  if(currentView==="today") d.setDate(d.getDate()+direction);
+  else if(currentView==="week") d.setDate(d.getDate()+direction*7);
+  else d.setMonth(d.getMonth()+direction);
+
+  anchorDate=d;
+  renderAll();
+}
+
+function getPeriodRange(){
+  const d=startOfDay(anchorDate);
+
+  if(currentView==="today"){
+    return {start:d,end:endOfDay(d)};
+  }
+
+  if(currentView==="week"){
+    const day=d.getDay();
+    const mondayOffset=day===0 ? -6 : 1-day;
+    const start=addDays(d,mondayOffset);
+    return {start,end:endOfDay(addDays(start,6))};
+  }
+
+  return {
+    start:new Date(d.getFullYear(),d.getMonth(),1),
+    end:new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59,999)
+  };
+}
+
+function getPeriodEntries(){
+  const {start,end}=getPeriodRange();
+
+  return records.filter(r=>{
+    const dt=new Date(`${r.date}T${r.time||"00:00"}`);
+    return dt>=start && dt<=end;
+  });
+}
+
+function formatPeriodLabel(){
+  const {start,end}=getPeriodRange();
+
+  if(currentView==="today"){
+    return start.toLocaleDateString(undefined,{
+      weekday:"short",day:"numeric",month:"short",year:"numeric"
+    });
+  }
+
+  if(currentView==="week"){
+    return `${start.toLocaleDateString(undefined,{day:"numeric",month:"short"})} – ${end.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}`;
+  }
+
+  return start.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+}
+
+function renderSummary(){
+  const entries=getPeriodEntries();
+  const count=type=>entries.filter(e=>e.type===type).length;
+
+  $("foodCount").textContent=count("Food / Drink");
+  $("medicineCount").textContent=count("Medicine");
+  $("ivCount").textContent=count("IV / Treatment");
+  $("tempCount").textContent=count("Temperature");
+}
+
+function extractTemperature(entry){
+  const match=`${entry.amount||""} ${entry.detail||""}`.match(/(\d{2}(?:\.\d+)?)\s*°?\s*c?/i);
+  if(!match) return null;
+
+  const value=Number(match[1]);
+  return value>=30 && value<=45 ? value : null;
+}
+
+function renderTemperatureChart(){
+  const points=getPeriodEntries()
+    .filter(e=>e.type==="Temperature")
+    .map(e=>({value:extractTemperature(e),date:e.date,time:e.time}))
+    .filter(p=>p.value!==null)
+    .sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+
+  if(!points.length){
+    $("tempChart").innerHTML="";
+    $("chartContainer").style.display="none";
+    $("chartEmpty").style.display="block";
+    return;
+  }
+
+  $("chartContainer").style.display="block";
+  $("chartEmpty").style.display="none";
+
+  const W=900,H=260,L=55,R=20,T=20,B=48,CW=W-L-R,CH=H-T-B;
+  const values=points.map(p=>p.value);
+
+  let min=Math.min(36,Math.floor((Math.min(...values)-0.5)*2)/2);
+  let max=Math.max(39,Math.ceil((Math.max(...values)+0.5)*2)/2);
+
+  if(max-min<1.5) max=min+1.5;
+
+  const x=i=>points.length===1 ? L+CW/2 : L+(i/(points.length-1))*CW;
+  const y=value=>T+((max-value)/(max-min))*CH;
+  const output=[];
+
+  for(let i=0;i<=5;i++){
+    const value=max-(i/5)*(max-min);
+    const yy=T+(i/5)*CH;
+    output.push(`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#e5e7eb"/>`);
+    output.push(`<text x="${L-10}" y="${yy+4}" text-anchor="end" font-size="12" fill="#6b7280">${value.toFixed(1)}°</text>`);
+  }
+
+  if(38>=min && 38<=max){
+    const feverY=y(38);
+    output.push(`<line x1="${L}" y1="${feverY}" x2="${W-R}" y2="${feverY}" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5 5"/>`);
+    output.push(`<text x="${W-R}" y="${feverY-6}" text-anchor="end" font-size="11" fill="#6b7280">38°C</text>`);
+  }
+
+  output.push(`<polyline points="${points.map((p,i)=>`${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
+
+  points.forEach((p,i)=>{
+    output.push(`<circle cx="${x(i)}" cy="${y(p.value)}" r="5" fill="#374151"><title>${p.date} ${p.time} — ${p.value.toFixed(1)}°C</title></circle>`);
+  });
+
+  const step=Math.max(1,Math.ceil(points.length/7));
+
+  points.forEach((p,i)=>{
+    if(i%step!==0 && i!==points.length-1) return;
+
+    const label=currentView==="today"
+      ? displayTimeShort(p.time)
+      : parseLocalDate(p.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+
+    output.push(`<text x="${x(i)}" y="${H-18}" text-anchor="middle" font-size="11" fill="#6b7280">${escapeHtml(label)}</text>`);
+  });
+
+  $("tempChart").innerHTML=output.join("");
+}
+
+function buildDailyCounts(){
+  const {start,end}=getPeriodRange();
+  const entries=getPeriodEntries();
+  const rows=[];
+
+  for(let d=startOfDay(start);d<=end;d=addDays(d,1)){
+    const date=toDateString(d);
+    const dayEntries=entries.filter(e=>e.date===date);
+
+    rows.push({
+      date,
+      food:dayEntries.filter(e=>e.type==="Food / Drink").length,
+      medicine:dayEntries.filter(e=>e.type==="Medicine").length,
+      iv:dayEntries.filter(e=>e.type==="IV / Treatment").length,
+      temp:dayEntries.filter(e=>e.type==="Temperature").length
+    });
+  }
+
+  return rows;
+}
+
+function renderCountsTable(){
+  let rows=buildDailyCounts();
+
+  if(currentView==="month"){
+    rows=rows.filter(r=>r.food||r.medicine||r.iv||r.temp);
+  }
+
+  if(!rows.length){
+    $("countsTableWrap").innerHTML='<div class="empty">No activity recorded in this period.</div>';
+    return;
+  }
+
+  $("countsTableWrap").innerHTML=`
+    <div style="overflow-x:auto">
+      <table class="counts-table">
+        <thead>
+          <tr><th>Date</th><th>Food</th><th>Medicine</th><th>IV</th><th>Temp</th></tr>
+        </thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td>${escapeHtml(parseLocalDate(r.date).toLocaleDateString(undefined,{month:"short",day:"numeric"}))}</td>
+              <td>${r.food}</td>
+              <td>${r.medicine}</td>
+              <td>${r.iv}</td>
+              <td>${r.temp}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function displayTime(time){
+  const [h,m]=time.split(":").map(Number);
+  const period=h>=12 ? "pm" : "am";
+  return `${h%12||12}:${String(m).padStart(2,"0")} ${period}`;
+}
+
+function displayTimeShort(time){
+  const [h,m]=time.split(":").map(Number);
+  const period=h>=12 ? "pm" : "am";
+  return `${h%12||12}${m?":"+String(m).padStart(2,"0"):""}${period}`;
+}
+
+function formatDate(dateString){
+  return parseLocalDate(dateString).toLocaleDateString(undefined,{
+    weekday:"long",year:"numeric",month:"long",day:"numeric"
+  });
+}
+
+function renderTimeline(){
+  let entries=getPeriodEntries();
+
+  if(timelineFilter!=="All"){
+    entries=entries.filter(e=>e.type===timelineFilter);
+  }
+
+  entries.sort((a,b)=>`${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
+
+  if(!entries.length){
+    $("timeline").innerHTML='<div class="empty">No records in this period.</div>';
+    return;
+  }
+
+  const grouped={};
+
+  entries.forEach(entry=>{
+    if(!grouped[entry.date]) grouped[entry.date]=[];
+    grouped[entry.date].push(entry);
+  });
+
+  $("timeline").innerHTML=Object.keys(grouped).sort().reverse().map(date=>`
+    <div class="day-group">
+      <div class="day-title">${escapeHtml(formatDate(date))}</div>
+      <div class="timeline">
+        ${grouped[date].map(record=>`
+          <div class="entry">
+            <div class="time">${escapeHtml(displayTime(record.time))}</div>
+            <div class="event-card">
+              <div class="event-top">
+                <div class="event-type">${escapeHtml(record.type)}</div>
+                <button class="secondary small" onclick="removeEntry('${record.id}')">Delete</button>
+              </div>
+              ${record.detail?`<div class="detail">${escapeHtml(record.detail)}</div>`:""}
+              ${record.amount?`<div class="meta"><strong>Amount / dose:</strong> ${escapeHtml(record.amount)}</div>`:""}
+              ${record.notes?`<div class="meta">${escapeHtml(record.notes)}</div>`:""}
+              ${record.createdBy && record.createdBy!=="unknown"?`<div class="meta">Recorded by ${escapeHtml(record.createdBy)}</div>`:""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderAll(){
+  $("periodLabel").textContent=formatPeriodLabel();
+  renderSummary();
+  renderTemperatureChart();
+  renderCountsTable();
+  renderTimeline();
+}
+
+function csvEscape(value){
+  return `"${String(value??"").replaceAll('"','""')}"`;
+}
+
+function exportCSV(){
+  if(!records.length){
+    alert("No records to export.");
+    return;
+  }
+
+  const headers=["Date","Time","Type","Amount / Dose","Details","Notes","Recorded By","Created At"];
+  const rows=[...records]
+    .sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
+    .map(r=>[r.date,r.time,r.type,r.amount,r.detail,r.notes,r.createdBy,r.createdAt]);
+
+  const csv=[headers,...rows].map(row=>row.map(csvEscape).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+
+  a.href=url;
+  a.download="dad-care-log.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+fillCurrentTime();
+updatePlaceholder();
+renderAll();
+
+loadRecords().catch(err=>{
+  $("timeline").innerHTML=`<div class="empty">${escapeHtml(err.message)}</div>`;
+});
+
+connectLive();
+
+setInterval(()=>{
+  if(ws && ws.readyState===WebSocket.OPEN){
+    ws.send("ping");
+  }
+},30000);
+</script>
+</body>
+</html>
