@@ -18,6 +18,7 @@
 
       familyAccess: "Family access",
       familyAccessDesc: "Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.",
+      viewerAccessDesc: "You are signed in with the view-only password. Records update live, but adding and deleting needs the editor password.",
       addDeleteRecords: "Add or delete records",
       signOut: "Sign out",
 
@@ -92,6 +93,7 @@
 
       familyAccess: "家庭访问",
       familyAccessDesc: "拥有链接和家庭密码的人都可以查看和更新此记录。更改会立即显示给所有人。",
+      viewerAccessDesc: "您使用的是只读密码。记录会实时更新，但添加和删除需要编辑密码。",
       addDeleteRecords: "添加或删除记录",
       signOut: "退出登录",
 

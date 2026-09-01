@@ -93,9 +93,9 @@
 
   <div class="card" style="border-left:4px solid #d97706; background:#fffaf3;">
     <h2 data-i18n="familyAccess">Family access</h2>
-    <div class="subtitle" style="margin-bottom:0;" data-i18n="familyAccessDesc">Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.</div>
+    <div class="subtitle" style="margin-bottom:0;" id="accessNote" data-i18n="familyAccessDesc">Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.</div>
     <div class="actions" style="margin-top:12px;">
-      <a href="/editor" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="addDeleteRecords">Add or delete records</a>
+      <a href="/editor" id="editorLink" class="secondary" style="display:none; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="addDeleteRecords">Add or delete records</a>
       <a href="/logout" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--muted);" data-i18n="signOut">Sign out</a>
     </div>
   </div>
@@ -593,7 +593,22 @@ function exportCSV(){
   URL.revokeObjectURL(url);
 }
 
-window.onLanguageChange=renderAll;
+let myRole="viewer";
+
+async function loadRole(){
+  try{
+    const res=await fetch("/api/me");
+    if(res.ok) myRole=(await res.json()).role || "viewer";
+  }catch{}
+  applyRole();
+}
+
+function applyRole(){
+  $("editorLink").style.display = myRole==="editor" ? "inline-block" : "none";
+  $("accessNote").textContent = I18N.t(myRole==="editor" ? "familyAccessDesc" : "viewerAccessDesc");
+}
+
+window.onLanguageChange=()=>{ applyRole(); renderAll(); };
 I18N.applyStatic();
 
 renderAll();
@@ -601,6 +616,8 @@ renderAll();
 loadRecords().catch(err=>{
   $("timeline").innerHTML=`<div class="empty">${escapeHtml(err.message)}</div>`;
 });
+
+loadRole();
 
 connectLive();
 

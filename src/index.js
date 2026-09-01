@@ -67,28 +67,37 @@ function readCookie(request, name) {
   return null;
 }
 
-async function hasValidSession(request, env) {
+const ROLES = new Set(["editor", "viewer"]);
+
+// Returns "editor", "viewer", or null. The role is inside the signed payload,
+// so it cannot be edited client-side without invalidating the signature.
+async function sessionRole(request, env) {
   const secret = env.SESSION_SECRET;
-  if (!secret) return false;
+  if (!secret) return null;
 
   const raw = readCookie(request, SESSION_COOKIE);
-  if (!raw) return false;
+  if (!raw) return null;
 
-  const [expires, signature] = raw.split(".");
-  if (!expires || !signature) return false;
+  const [expires, role, signature] = raw.split(".");
+  if (!expires || !role || !signature) return null;
+  if (!ROLES.has(role)) return null;
 
   if (!/^\d+$/.test(expires) || Number(expires) < Math.floor(Date.now() / 1000)) {
-    return false;
+    return null;
   }
 
-  const expected = await sign(expires, secret);
-  return constantTimeEqual(encoder.encode(expected), encoder.encode(signature));
+  const expected = await sign(`${expires}.${role}`, secret);
+  if (!constantTimeEqual(encoder.encode(expected), encoder.encode(signature))) {
+    return null;
+  }
+
+  return role;
 }
 
-async function makeSessionCookie(env) {
+async function makeSessionCookie(env, role) {
   const expires = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const signature = await sign(String(expires), env.SESSION_SECRET);
-  return `${SESSION_COOKIE}=${expires}.${signature}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`;
+  const signature = await sign(`${expires}.${role}`, env.SESSION_SECRET);
+  return `${SESSION_COOKIE}=${expires}.${role}.${signature}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`;
 }
 
 function loginPage(message = "") {
@@ -122,7 +131,7 @@ function loginPage(message = "") {
   <form class="card" method="POST" action="/login">
     <h1>Dad Care Log</h1>
     <div class="zh-title">爸爸照护记录</div>
-    <p>Enter the family password to continue.<br><span class="zh">请输入家庭密码以继续。</span></p>
+    <p>Enter your family password to continue.<br><span class="zh">请输入家庭密码以继续。</span></p>
     ${message ? `<div class="err">${message}</div>` : ""}
     <label for="password">Password · 密码</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required>
@@ -149,7 +158,12 @@ export default {
         const form = await request.formData();
         const supplied = String(form.get("password") || "");
 
-        if (!(await passwordMatches(supplied, env.SITE_PASSWORD))) {
+        // Check both passwords so either one signs you in, at its own level.
+        let role = null;
+        if (await passwordMatches(supplied, env.SITE_PASSWORD)) role = "editor";
+        else if (await passwordMatches(supplied, env.VIEWER_PASSWORD)) role = "viewer";
+
+        if (!role) {
           return loginPage("That password is not correct. · 密码不正确。");
         }
 
@@ -157,7 +171,7 @@ export default {
           status: 303,
           headers: {
             location: "/",
-            "set-cookie": await makeSessionCookie(env),
+            "set-cookie": await makeSessionCookie(env, role),
           },
         });
       }
@@ -175,21 +189,39 @@ export default {
       });
     }
 
-    // Everything past this point requires the shared password.
-    if (!(await hasValidSession(request, env))) {
+    // Everything past this point requires one of the two passwords.
+    const role = await sessionRole(request, env);
+
+    if (!role) {
       if (url.pathname.startsWith("/api/") || url.pathname === "/ws") {
         return json({ error: "Sign in required" }, 401);
       }
       return loginPage();
     }
 
+    // Lets the page hide controls the signed-in role cannot use. The server
+    // enforces the same rule below regardless of what the page does.
+    if (url.pathname === "/api/me") {
+      return json({ role });
+    }
+
     if (url.pathname === "/editor" || url.pathname === "/editor.html") {
+      if (role !== "editor") {
+        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+      }
       // Ask the asset router for the extension-less path it canonicalizes to,
       // otherwise it 307s back to /editor and we loop.
       return env.ASSETS.fetch(new Request(new URL("/editor", request.url), request));
     }
 
     if (url.pathname.startsWith("/api/") || url.pathname === "/ws") {
+      // Viewers may read and receive live updates, but never write.
+      const isWrite = request.method !== "GET" && request.method !== "HEAD";
+
+      if (isWrite && role !== "editor") {
+        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+      }
+
       const id = env.CARE_ROOM.idFromName("dad-care-room");
       const room = env.CARE_ROOM.get(id);
       return room.fetch(new Request(request));
