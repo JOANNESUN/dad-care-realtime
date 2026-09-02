@@ -41,6 +41,11 @@
     .status { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; font-size:13px; background:var(--good-bg); color:var(--good); }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
     .topline-right { display:flex; align-items:center; gap:10px; }
+    .choice-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .choice { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 12px; min-width:66px;
+              border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--text); cursor:pointer; font-size:12px; }
+    .choice .big { font-size:22px; line-height:1.2; }
+    .choice.active { background:var(--accent); color:#fff; border-color:var(--accent); }
     .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
     .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
     .lang-tab.active { background:var(--accent); color:#fff; }
@@ -51,49 +56,54 @@
 <div class="container">
   <div class="topline">
     <div>
-      <h1 data-i18n="appTitle">Dad Care Log</h1>
-      <div class="subtitle" data-i18n="editorSubtitle">Family editor access</div>
+      <h1 data-i18n="appTitle"></h1>
+      <div class="subtitle" data-i18n="editorSubtitle"></div>
     </div>
     <div class="topline-right">
       <div class="lang-tabs" role="group" aria-label="Language">
         <button type="button" class="secondary lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
         <button type="button" class="secondary lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
       </div>
-      <div class="status"><span class="dot"></span><span data-i18n="editorActive">Editor access active</span></div>
+      <div class="status"><span class="dot"></span><span data-i18n="editorActive"></span></div>
     </div>
   </div>
 
   <div class="card">
-    <h2 data-i18n="addRecord">Add a record</h2>
+    <h2 data-i18n="addRecord"></h2>
     <div class="grid">
-      <div><label data-i18n="labelDate">Date</label><input id="date" type="date"></div>
-      <div><label data-i18n="labelTime">Time</label><input id="time" type="time"></div>
+      <div><label data-i18n="labelDate"></label><input id="date" type="date"></div>
+      <div><label data-i18n="labelTime"></label><input id="time" type="time"></div>
       <div>
-        <label data-i18n="labelType">Record type</label>
+        <label data-i18n="labelType"></label>
         <select id="type" onchange="updatePlaceholder()">
-          <option value="Food / Drink" data-i18n-type="Food / Drink">Food / Drink</option>
-          <option value="Medicine" data-i18n-type="Medicine">Medicine</option>
-          <option value="IV / Treatment" data-i18n-type="IV / Treatment">IV / Treatment</option>
-          <option value="Temperature" data-i18n-type="Temperature">Temperature</option>
-          <option value="Sleep / Rest" data-i18n-type="Sleep / Rest">Sleep / Rest</option>
-          <option value="Symptoms" data-i18n-type="Symptoms">Symptoms</option>
-          <option value="Other" data-i18n-type="Other">Other</option>
+          <option value="Food / Drink" data-i18n-type="Food / Drink"></option>
+          <option value="Medicine" data-i18n-type="Medicine"></option>
+          <option value="IV / Treatment" data-i18n-type="IV / Treatment"></option>
+          <option value="Temperature" data-i18n-type="Temperature"></option>
+          <option value="Sleep / Rest" data-i18n-type="Sleep / Rest"></option>
+          <option value="Symptoms" data-i18n-type="Symptoms"></option>
+          <option value="Wellness" data-i18n-type="Wellness"></option>
+          <option value="Other" data-i18n-type="Other"></option>
         </select>
       </div>
-      <div><label data-i18n="labelAmount">Amount / dose / value (optional)</label><input id="amount" type="text"></div>
-      <div class="full"><label data-i18n="labelDetail">What happened?</label><textarea id="detail"></textarea></div>
-      <div class="full"><label data-i18n="labelNotes">Extra notes (optional)</label><input id="notes" type="text"></div>
+      <div id="amountField"><label data-i18n="labelAmount"></label><input id="amount" type="text"></div>
+      <div id="choiceField" style="display:none">
+        <label id="choiceLabel"></label>
+        <div id="choiceButtons" class="choice-row"></div>
+      </div>
+      <div class="full"><label data-i18n="labelDetail"></label><textarea id="detail"></textarea></div>
+      <div class="full"><label data-i18n="labelNotes"></label><input id="notes" type="text"></div>
     </div>
     <div class="actions">
-      <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline">Add to timeline</button>
-      <button class="secondary" onclick="fillCurrentTime()" data-i18n="useCurrentTime">Use current time</button>
-      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="backToLog">Back to the log</a>
+      <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline"></button>
+      <button class="secondary" onclick="fillCurrentTime()" data-i18n="useCurrentTime"></button>
+      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="backToLog"></a>
     </div>
     <div id="formError" class="error"></div>
   </div>
 
   <div class="card">
-    <h2 data-i18n="recentRecords">Recent care records</h2>
+    <h2 data-i18n="recentRecords"></h2>
     <div id="entries" class="entry-list"></div>
   </div>
 </div>
@@ -111,10 +121,48 @@ function fillCurrentTime() {
   $("time").value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
+let choiceValue = "";
+
+// Location and Wellness are fixed sets, so they get buttons instead of a
+// free-text box — nothing to mistype, and the stored values stay valid.
+function choicesFor(type) {
+  if (type === "Wellness") {
+    return ["5", "4", "3", "2", "1"].map(v => ({
+      value: v, big: I18N.wellnessEmoji(v), label: I18N.wellnessLabel(v)
+    }));
+  }
+  return null;
+}
+
+function setChoice(value) {
+  choiceValue = value;
+  document.querySelectorAll("#choiceButtons .choice").forEach(b => {
+    b.classList.toggle("active", b.dataset.value === value);
+  });
+}
+
 function updatePlaceholder() {
-  const [detail, amount] = I18N.placeholders($("type").value);
+  const type = $("type").value;
+  const [detail, amount] = I18N.placeholders(type);
   $("detail").placeholder = detail;
   $("amount").placeholder = amount;
+
+  const choices = choicesFor(type);
+  $("amountField").style.display = choices ? "none" : "";
+  $("choiceField").style.display = choices ? "" : "none";
+
+  if (!choices) {
+    choiceValue = "";
+    return;
+  }
+
+  $("choiceLabel").textContent = I18N.t("wellnessLabel");
+  $("choiceButtons").innerHTML = choices.map(c => `
+    <button type="button" class="choice" data-value="${escapeHtml(c.value)}" onclick="setChoice('${escapeHtml(c.value)}')">
+      <span class="big">${c.big}</span><span>${escapeHtml(c.label)}</span>
+    </button>`).join("");
+
+  setChoice(choices[0].value);
 }
 
 function escapeHtml(value) {
@@ -127,7 +175,7 @@ async function addEntry() {
     date: $("date").value,
     time: $("time").value,
     type: $("type").value,
-    amount: $("amount").value.trim(),
+    amount: choicesFor($("type").value) ? choiceValue : $("amount").value.trim(),
     detail: $("detail").value.trim(),
     notes: $("notes").value.trim()
   };
@@ -186,13 +234,18 @@ async function loadRecords() {
       <div class="entry">
         <div class="entry-head">
           <div>
-            <span class="pill">${escapeHtml(I18N.typeLabel(record.type))}</span>
+            <span class="pill">${record.type==="Wellness"
+              ? escapeHtml(`${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`)
+              : record.type==="Location"
+              ? escapeHtml(`${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`)
+              : escapeHtml(I18N.typeLabel(record.type))}</span>
             <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { weekday: "short", month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</div>
           </div>
           <button class="danger" onclick="deleteEntry('${record.id}')">${escapeHtml(I18N.t("deleteBtn"))}</button>
         </div>
         ${record.detail ? `<div class="detail">${escapeHtml(record.detail)}</div>` : ""}
-        ${record.amount ? `<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>` : ""}
+        ${record.amount && record.type !== "Wellness" && record.type !== "Location"
+          ? `<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>` : ""}
         ${record.notes ? `<div class="meta">${escapeHtml(record.notes)}</div>` : ""}
       </div>
     `).join("");
