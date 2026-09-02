@@ -143,6 +143,17 @@ function loginPage(message = "") {
   );
 }
 
+function isLocalRequest(request) {
+  const host = (request.headers.get("host") || "").split(":")[0];
+  return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+}
+
+function devBypassRole(request, env) {
+  if (env.DEV_SKIP_AUTH !== "true") return null;
+  if (!isLocalRequest(request)) return null;
+  return env.DEV_SKIP_AUTH_ROLE === "viewer" ? "viewer" : "editor";
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -190,7 +201,11 @@ export default {
     }
 
     // Everything past this point requires one of the two passwords.
-    const role = await sessionRole(request, env);
+    // DEV_SKIP_AUTH lets `wrangler dev` render the pages without signing in.
+    // It is double-guarded: the flag lives only in .dev.vars (gitignored and
+    // never uploaded), and it is ignored unless the request is to localhost,
+    // so setting it in production still cannot expose anything.
+    const role = devBypassRole(request, env) || (await sessionRole(request, env));
 
     if (!role) {
       if (url.pathname.startsWith("/api/") || url.pathname === "/ws") {
