@@ -10,15 +10,12 @@
       pageTitle: "Dad Care Log",
       editorPageTitle: "Dad Care Log — Editor",
       appTitle: "Dad Care Log",
-      subtitle: "Shared live record for meals, medicines, IV treatment, temperature, sleep and symptoms.",
 
       connecting: "Connecting…",
       live: "Live",
       reconnecting: "Reconnecting…",
 
       familyAccess: "Family access",
-      familyAccessDesc: "Everyone with the link and the family password can view and update this log. Changes appear for everyone instantly.",
-      viewerAccessDesc: "You are signed in with the view-only password. Records update live, but adding and deleting needs the editor password.",
       addDeleteRecords: "Add or delete records",
       signOut: "Sign out",
 
@@ -66,7 +63,7 @@
       labelNotes: "Extra notes (optional)",
       addToTimeline: "Add to timeline",
       useCurrentTime: "Use current time",
-      backToLog: "Back to the log",
+      backToLog: "Record log",
       recentRecords: "Recent care records",
       noRecordsYet: "No records yet.",
       deleteBtn: "Delete",
@@ -78,6 +75,16 @@
       confirmDelete: "Delete this record?",
       nothingToExport: "No records to export.",
 
+      statusHome: "At home",
+      statusHospital: "In hospital",
+      statusUnknown: "Location not recorded yet",
+      statusSince: "since",
+      wellnessTrend: "How he is feeling",
+      noWellness: "No wellness check-ins in this period.",
+      wellnessLabel: "Overall wellness",
+      locationLabel: "Where is he?",
+      w5: "Very good", w4: "Good", w3: "Okay", w2: "Not great", w1: "Poor",
+      sumWellness: "Wellness check-ins",
       csvHeaders: ["Date", "Time", "Type", "Amount / Dose", "Details", "Notes", "Created At"],
     },
 
@@ -85,15 +92,12 @@
       pageTitle: "爸爸照护记录",
       editorPageTitle: "爸爸照护记录 — 编辑",
       appTitle: "爸爸照护记录",
-      subtitle: "共享实时记录：饮食、药物、输液、体温、睡眠与症状。",
 
       connecting: "连接中…",
       live: "实时",
       reconnecting: "重新连接中…",
 
       familyAccess: "家庭访问",
-      familyAccessDesc: "拥有链接和家庭密码的人都可以查看和更新此记录。更改会立即显示给所有人。",
-      viewerAccessDesc: "您使用的是只读密码。记录会实时更新，但添加和删除需要编辑密码。",
       addDeleteRecords: "添加或删除记录",
       signOut: "退出登录",
 
@@ -141,7 +145,7 @@
       labelNotes: "补充备注（可选）",
       addToTimeline: "添加到时间线",
       useCurrentTime: "使用当前时间",
-      backToLog: "返回记录",
+      backToLog: "状态记录",
       recentRecords: "最近的照护记录",
       noRecordsYet: "暂无记录。",
       deleteBtn: "删除",
@@ -153,6 +157,16 @@
       confirmDelete: "确定要删除这条记录吗？",
       nothingToExport: "没有可导出的记录。",
 
+      statusHome: "在家",
+      statusHospital: "在医院",
+      statusUnknown: "尚未记录所在位置",
+      statusSince: "自",
+      wellnessTrend: "整体状态",
+      noWellness: "此期间没有状态记录。",
+      wellnessLabel: "整体状态",
+      locationLabel: "现在在哪里？",
+      w5: "很好", w4: "还好", w3: "一般", w2: "不太好", w1: "很不好",
+      sumWellness: "状态记录",
       csvHeaders: ["日期", "时间", "类型", "用量 / 剂量", "详情", "备注", "创建时间"],
     },
   };
@@ -166,6 +180,8 @@
       "Temperature": "Temperature",
       "Sleep / Rest": "Sleep / Rest",
       "Symptoms": "Symptoms",
+      "Location": "Location",
+      "Wellness": "Wellness",
       "Other": "Other",
     },
     zh: {
@@ -175,6 +191,8 @@
       "Temperature": "体温",
       "Sleep / Rest": "睡眠 / 休息",
       "Symptoms": "症状",
+      "Location": "位置",
+      "Wellness": "状态",
       "Other": "其他",
     },
   };
@@ -187,6 +205,8 @@
       "Temperature": ["e.g. Fever has subsided", "e.g. 37.2°C"],
       "Sleep / Rest": ["e.g. Started afternoon nap", "e.g. slept 1 hour"],
       "Symptoms": ["e.g. Mild nausea, no vomiting", "e.g. mild / moderate"],
+      "Location": ["e.g. Admitted for observation", ""],
+      "Wellness": ["e.g. Tired but comfortable, ate well", ""],
       "Other": ["e.g. Doctor visit or general observation", "optional"],
     },
     zh: {
@@ -196,6 +216,8 @@
       "Temperature": ["例如：烧退了", "例如：37.2°C"],
       "Sleep / Rest": ["例如：开始午睡", "例如：睡了 1 小时"],
       "Symptoms": ["例如：轻微恶心，没有呕吐", "例如：轻度 / 中度"],
+      "Location": ["例如：入院观察", ""],
+      "Wellness": ["例如：有点累但还舒服，吃得不错", ""],
       "Other": ["例如：就诊或一般观察", "可选"],
     },
   };
@@ -227,6 +249,22 @@
 
     placeholders(storedType) {
       return (PLACEHOLDERS[lang][storedType] ?? PLACEHOLDERS.en[storedType]) || ["", ""];
+    },
+
+    wellnessEmoji(score) {
+      return { "5": "\u{1F604}", "4": "\u{1F642}", "3": "\u{1F610}", "2": "\u{1F615}", "1": "\u{1F623}" }[String(score)] || "";
+    },
+
+    wellnessLabel(score) {
+      return I18N.t("w" + String(score));
+    },
+
+    locationEmoji(place) {
+      return place === "Hospital" ? "\u{1F3E5}" : "\u{1F3E0}";
+    },
+
+    locationLabel(place) {
+      return I18N.t(place === "Hospital" ? "statusHospital" : "statusHome");
     },
 
     locale() {

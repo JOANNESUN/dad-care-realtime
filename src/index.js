@@ -7,8 +7,18 @@ const VALID_TYPES = new Set([
   "Temperature",
   "Sleep / Rest",
   "Symptoms",
+  "Location",
+  "Wellness",
   "Other",
 ]);
+
+// Location is a state with duration, not a one-off event: each record marks a
+// change, and the page shows the most recent one as the current status.
+const LOCATION_VALUES = new Set(["Home", "Hospital"]);
+
+// 1-5 wellness scale. Stored as a number so it can be charted; the emoji and
+// the wording live in the client dictionary.
+const WELLNESS_VALUES = new Set(["1", "2", "3", "4", "5"]);
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -335,6 +345,14 @@ export class CareRoom extends DurableObject {
 
     if (!VALID_TYPES.has(type)) {
       return json({ error: "Invalid record type" }, 400);
+    }
+
+    if (type === "Location" && !LOCATION_VALUES.has(amount)) {
+      return json({ error: "Location must be Home or Hospital" }, 400);
+    }
+
+    if (type === "Wellness" && !WELLNESS_VALUES.has(amount)) {
+      return json({ error: "Wellness must be 1 to 5" }, 400);
     }
 
     if (!amount && !detail) {
