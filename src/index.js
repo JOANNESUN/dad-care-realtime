@@ -117,6 +117,15 @@ function loginPage(message = "") {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#f6f7f8">
+<!-- Opened from the home screen these drop the browser chrome, so it reads
+     as an app rather than a page. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dad Care">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Dad Care Log · 爸爸照护记录</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
@@ -208,6 +217,15 @@ export default {
           "set-cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
         },
       });
+    }
+
+    // The manifest and the icons are served before the password check on
+    // purpose: browsers fetch a manifest without cookies unless it is marked
+    // crossorigin, so gating it would hand the phone the login page instead of
+    // the manifest and the home-screen icon would fall back to a screenshot.
+    // Neither file says anything the login page does not already say.
+    if (url.pathname === "/manifest.webmanifest" || url.pathname.startsWith("/icons/")) {
+      return env.ASSETS.fetch(request);
     }
 
     // Everything past this point requires one of the two passwords.

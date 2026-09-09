@@ -73,5 +73,19 @@ For six users and one care log, that is a very small workload.
 
 - `public/index.html` — the page
 - `src/index.js` — API, SQLite database, and WebSocket server
+- `public/manifest.webmanifest` — lets phones add the app to the home screen
+- `tools/make-icons.js` — regenerates the home-screen icons
 - `wrangler.jsonc` — Cloudflare configuration
 - `package.json` — local/deploy commands
+
+## Home screen icon
+
+The icons in `public/icons/` are generated, not hand-drawn. To change the
+artwork, edit the geometry at the top of `tools/make-icons.js` and re-run:
+
+```sh
+node tools/make-icons.js public/icons
+```
+
+Note that phones cache the icon once it is on a home screen, so anyone who
+already added it has to remove and re-add it to see a new one.
