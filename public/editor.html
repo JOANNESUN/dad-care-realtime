@@ -55,6 +55,33 @@
               border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--text); cursor:pointer; font-size:12px; }
     .choice .big { font-size:22px; line-height:1.2; }
     .choice.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    /* Temperature is the one type with a real numeric scale, so it gets a bar
+       instead of a text box. The bands mark where a normal reading turns into
+       a fever, and the +/- buttons cover the last tenth a thumb can't land on. */
+    .temp-readout { display:flex; align-items:baseline; justify-content:center; gap:4px;
+                    font-variant-numeric:tabular-nums; }
+    .temp-value { font-size:42px; font-weight:600; line-height:1; letter-spacing:-.02em; }
+    .temp-unit { font-size:17px; color:var(--muted); }
+    .temp-zone { text-align:center; font-size:13px; font-weight:600; margin-top:5px; }
+    /* Inset by half the thumb so it never hangs off the card at 35.0 or 41.0.
+       The scale below carries the same inset, so the two stay aligned. */
+    .temp-bar { position:relative; height:46px; margin:10px 18px 0; border-radius:8px;
+                touch-action:none; cursor:pointer; }
+    .temp-bar:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+    .temp-track { position:absolute; left:0; right:0; top:18px; height:10px;
+                  border-radius:6px; overflow:hidden; display:flex; }
+    .temp-thumb { position:absolute; top:5px; width:36px; height:36px; margin-left:-18px;
+                  border-radius:50%; background:#fff; border:2px solid var(--accent);
+                  box-shadow:0 2px 6px rgba(0,0,0,.18); }
+    .temp-scale { position:relative; height:16px; margin:0 18px; font-size:11px; color:var(--muted);
+                  font-variant-numeric:tabular-nums; }
+    .temp-scale span { position:absolute; top:0; }
+    .temp-steps { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:12px; }
+    .temp-step { width:44px; height:44px; border:1px solid var(--line); border-radius:12px;
+                 background:#fff; color:var(--text); font-size:20px; line-height:1; }
+    .temp-step:active { background:var(--soft); }
+    .temp-step-hint { font-size:12px; color:var(--muted); min-width:48px; text-align:center; }
     .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
     .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
     .lang-tab.active { background:var(--accent); color:#fff; }
@@ -99,6 +126,21 @@
       <div id="choiceField" style="display:none">
         <label id="choiceLabel"></label>
         <div id="choiceButtons" class="choice-row"></div>
+      </div>
+      <div id="tempField" class="full" style="display:none">
+        <label data-i18n="labelTemperature"></label>
+        <div class="temp-readout"><span class="temp-value" id="tempValue">36.8</span><span class="temp-unit">°C</span></div>
+        <div class="temp-zone" id="tempZone"></div>
+        <div class="temp-bar" id="tempBar" role="slider" tabindex="0" aria-valuemin="35" aria-valuemax="41">
+          <div class="temp-track" id="tempTrack"></div>
+          <div class="temp-thumb" id="tempThumb"></div>
+        </div>
+        <div class="temp-scale" id="tempScale"></div>
+        <div class="temp-steps">
+          <button type="button" class="temp-step" id="tempDown">−</button>
+          <span class="temp-step-hint">0.1 °C</span>
+          <button type="button" class="temp-step" id="tempUp">+</button>
+        </div>
       </div>
       <div class="full"><label data-i18n="labelDetail"></label><textarea id="detail"></textarea></div>
       <div class="full"><label data-i18n="labelNotes"></label><input id="notes" type="text"></div>
@@ -150,6 +192,104 @@ function setChoice(value) {
   });
 }
 
+// Temperature: a bar across the range a person can actually run. Anything
+// outside 35-41 belongs in the notes, not on a slider.
+const TEMP_MIN = 350, TEMP_MAX = 410;
+const TEMP_BANDS = [
+  { to: 359, key: "tempLow",    fill: "#bfdbfe", ink: "#1d4ed8" },
+  { to: 372, key: "tempNormal", fill: "#bbf7d0", ink: "#166534" },
+  { to: 379, key: "tempMild",   fill: "#fde68a", ink: "#92400e" },
+  { to: 389, key: "tempFever",  fill: "#fdba74", ink: "#b45309" },
+  { to: 999, key: "tempHigh",   fill: "#fca5a5", ink: "#991b1b" }
+];
+
+let tempTenths = 368;
+let tempTouched = false;
+
+const tempText = () => (tempTenths / 10).toFixed(1);
+const tempBand = () => TEMP_BANDS.find(b => tempTenths <= b.to);
+
+function setTemp(tenths, byHand) {
+  tempTenths = Math.max(TEMP_MIN, Math.min(TEMP_MAX, Math.round(tenths)));
+  if (byHand) tempTouched = true;
+  renderTemp();
+}
+
+function renderTemp() {
+  const band = tempBand();
+  $("tempValue").textContent = tempText();
+  $("tempZone").textContent = I18N.t(band.key);
+  $("tempZone").style.color = band.ink;
+  $("tempThumb").style.left = ((tempTenths - TEMP_MIN) / (TEMP_MAX - TEMP_MIN) * 100) + "%";
+  $("tempBar").setAttribute("aria-label", I18N.t("labelTemperature"));
+  $("tempBar").setAttribute("aria-valuenow", tempText());
+  $("tempBar").setAttribute("aria-valuetext", `${tempText()} °C`);
+  $("tempDown").setAttribute("aria-label", I18N.t("tempLower"));
+  $("tempUp").setAttribute("aria-label", I18N.t("tempRaise"));
+}
+
+function initTempPicker() {
+  let cursor = TEMP_MIN;
+  $("tempTrack").innerHTML = TEMP_BANDS.map(band => {
+    const end = Math.min(band.to, TEMP_MAX);
+    if (end < cursor) return "";
+    const width = end - cursor;
+    cursor = end;
+    return `<span style="flex:${width}; background:${band.fill}"></span>`;
+  }).join("");
+
+  // Whole degrees only - a tick every tenth would be unreadable at this width.
+  $("tempScale").innerHTML = Array.from({ length: (TEMP_MAX - TEMP_MIN) / 10 + 1 }, (_, i) => {
+    const tenths = TEMP_MIN + i * 10;
+    const pct = (tenths - TEMP_MIN) / (TEMP_MAX - TEMP_MIN) * 100;
+    const shift = pct === 0 ? "0" : pct === 100 ? "-100%" : "-50%";
+    return `<span style="left:${pct}%; transform:translateX(${shift})">${tenths / 10}</span>`;
+  }).join("");
+
+  const bar = $("tempBar");
+  const fromPointer = event => {
+    const box = bar.getBoundingClientRect();
+    const ratio = (event.clientX - box.left) / box.width;
+    return TEMP_MIN + ratio * (TEMP_MAX - TEMP_MIN);
+  };
+
+  let dragging = false;
+  bar.addEventListener("pointerdown", event => {
+    dragging = true;
+    bar.setPointerCapture(event.pointerId);
+    setTemp(fromPointer(event), true);
+  });
+  bar.addEventListener("pointermove", event => {
+    if (dragging) setTemp(fromPointer(event), true);
+  });
+  const release = () => { dragging = false; };
+  bar.addEventListener("pointerup", release);
+  bar.addEventListener("pointercancel", release);
+
+  bar.addEventListener("keydown", event => {
+    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1,
+                   PageDown: -10, PageUp: 10 }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    setTemp(tempTenths + step, true);
+  });
+
+  $("tempDown").onclick = () => setTemp(tempTenths - 1, true);
+  $("tempUp").onclick = () => setTemp(tempTenths + 1, true);
+  renderTemp();
+}
+
+// Open on the last reading rather than a generic 36.8 - the next one is
+// usually close to it. Stops once someone has moved the bar themselves.
+function seedTemp(records) {
+  if (tempTouched) return;
+  const last = records
+    .filter(r => r.type === "Temperature")
+    .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`))[0];
+  const match = last && String(last.amount).match(/(\d{2}(?:\.\d)?)/);
+  if (match) setTemp(Number(match[1]) * 10, false);
+}
+
 function updatePlaceholder() {
   const type = $("type").value;
   const [detail, amount] = I18N.placeholders(type);
@@ -157,8 +297,11 @@ function updatePlaceholder() {
   $("amount").placeholder = amount;
 
   const choices = choicesFor(type);
-  $("amountField").style.display = choices ? "none" : "";
+  const isTemp = type === "Temperature";
+  $("amountField").style.display = choices || isTemp ? "none" : "";
   $("choiceField").style.display = choices ? "" : "none";
+  $("tempField").style.display = isTemp ? "" : "none";
+  if (isTemp) renderTemp();
 
   if (!choices) {
     choiceValue = "";
@@ -180,11 +323,17 @@ function escapeHtml(value) {
 
 async function addEntry() {
   $("formError").textContent = "";
+  const type = $("type").value;
+  // Stored as the same "37.2°C" string the log's chart already parses.
+  const amount = type === "Temperature" ? `${tempText()}°C`
+               : choicesFor(type) ? choiceValue
+               : $("amount").value.trim();
+
   const payload = {
     date: $("date").value,
     time: $("time").value,
-    type: $("type").value,
-    amount: choicesFor($("type").value) ? choiceValue : $("amount").value.trim(),
+    type,
+    amount,
     detail: $("detail").value.trim(),
     notes: $("notes").value.trim()
   };
@@ -232,6 +381,7 @@ async function loadRecords() {
   }
 
   const records = await res.json();
+  seedTemp(records);
   if (!records.length) {
     $("entries").innerHTML = `<div class="empty">${escapeHtml(I18N.t("noRecordsYet"))}</div>`;
     return;
@@ -267,6 +417,7 @@ window.onLanguageChange = () => {
 
 I18N.applyStatic();
 fillCurrentTime();
+initTempPicker();
 updatePlaceholder();
 loadRecords().catch(err => {
   $("entries").innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;
