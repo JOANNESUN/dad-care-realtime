@@ -47,6 +47,7 @@
       thMedicine: "Medicine",
       thIv: "IV",
       thTemp: "Temp",
+      thSleep: "Slept",
 
       exportCsv: "Export CSV",
       footerNote: "This page is for personal record-keeping only and is not a substitute for medical advice.",
@@ -152,6 +153,7 @@
       thMedicine: "药物",
       thIv: "输液",
       thTemp: "体温",
+      thSleep: "睡眠",
 
       exportCsv: "导出 CSV",
       footerNote: "此页面仅用于个人记录，不能替代医疗建议。",
