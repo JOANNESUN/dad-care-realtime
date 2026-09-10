@@ -30,9 +30,10 @@
     .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .full { grid-column:1/-1; }
-    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
-    input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
-    textarea { min-height:76px; resize:vertical; }
+    label { display:block; font-size:14px; color:var(--muted); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:11px 12px; border:1px solid var(--line);
+                            border-radius:10px; font:inherit; font-size:17px; }
+    textarea { min-height:92px; resize:vertical; line-height:1.5; }
     button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
     .primary { background:var(--accent); color:#fff; }
@@ -42,6 +43,12 @@
     .entry-list { display:flex; flex-direction:column; gap:12px; }
     .entry { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
     .entry-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .entry-line { display:flex; align-items:center; gap:9px; }
+    .entry-icon { font-size:21px; line-height:1.2; }
+    .entry-when { font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .entry-body { font-size:17px; line-height:1.5; margin-top:7px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .entry-value { font-weight:700; }
+    .entry-bare { color:var(--muted); }
     .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:var(--soft); font-size:12px; font-weight:700; }
     .detail { margin-top:8px; line-height:1.5; white-space:pre-wrap; }
     .meta { font-size:13px; margin-top:7px; }
@@ -55,6 +62,42 @@
               border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--text); cursor:pointer; font-size:12px; }
     .choice .big { font-size:22px; line-height:1.2; }
     .choice.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    /* Temperature is the one type with a real numeric scale, so it gets a bar
+       instead of a text box. The bands mark where a normal reading turns into
+       a fever, and the +/- buttons cover the last tenth a thumb can't land on. */
+    .temp-readout { display:flex; align-items:baseline; justify-content:center; gap:4px;
+                    font-variant-numeric:tabular-nums; }
+    .temp-value { font-size:42px; font-weight:600; line-height:1; letter-spacing:-.02em; }
+    .temp-unit { font-size:17px; color:var(--muted); }
+    .temp-zone { text-align:center; font-size:13px; font-weight:600; margin-top:5px; }
+    /* Inset by half the thumb so it never hangs off the card at 35.0 or 41.0.
+       The scale below carries the same inset, so the two stay aligned. */
+    .temp-bar { position:relative; height:46px; margin:10px 18px 0; border-radius:8px;
+                touch-action:none; cursor:pointer; }
+    .temp-bar:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+    .temp-track { position:absolute; left:0; right:0; top:18px; height:10px;
+                  border-radius:6px; overflow:hidden; display:flex; }
+    .temp-thumb { position:absolute; top:5px; width:36px; height:36px; margin-left:-18px;
+                  border-radius:50%; background:#fff; border:2px solid var(--accent);
+                  box-shadow:0 2px 6px rgba(0,0,0,.18); }
+    .temp-scale { position:relative; height:16px; margin:0 18px; font-size:11px; color:var(--muted);
+                  font-variant-numeric:tabular-nums; }
+    .temp-scale span { position:absolute; top:0; }
+    .temp-steps { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:12px; }
+    .temp-step { width:44px; height:44px; border:1px solid var(--line); border-radius:12px;
+                 background:#fff; color:var(--text); font-size:20px; line-height:1; }
+    .temp-step:active { background:var(--soft); }
+    .temp-step-hint { font-size:12px; color:var(--muted); min-width:48px; text-align:center; }
+
+    /* Sleep is just a length, so it borrows the temperature bar wholesale and
+       only adds the filled portion and its own readout. */
+    .sleep-readout { display:flex; align-items:baseline; justify-content:center; gap:2px;
+                     font-variant-numeric:tabular-nums; }
+    .sleep-readout b { font-size:42px; font-weight:600; line-height:1; letter-spacing:-.02em; }
+    .sleep-readout span { font-size:17px; color:var(--muted); margin-right:7px; }
+    .sleep-fill { position:absolute; left:0; top:0; bottom:0; background:#c7d2fe; }
+
     .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
     .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
     .lang-tab.active { background:var(--accent); color:#fff; }
@@ -92,16 +135,44 @@
           <option value="Sleep / Rest" data-i18n-type="Sleep / Rest"></option>
           <option value="Symptoms" data-i18n-type="Symptoms"></option>
           <option value="Wellness" data-i18n-type="Wellness"></option>
+          <option value="Note" data-i18n-type="Note"></option>
           <option value="Other" data-i18n-type="Other"></option>
         </select>
       </div>
-      <div id="amountField"><label data-i18n="labelAmount"></label><input id="amount" type="text"></div>
       <div id="choiceField" style="display:none">
         <label id="choiceLabel"></label>
         <div id="choiceButtons" class="choice-row"></div>
       </div>
+      <div id="tempField" class="full" style="display:none">
+        <label data-i18n="labelTemperature"></label>
+        <div class="temp-readout"><span class="temp-value" id="tempValue">36.8</span><span class="temp-unit">°C</span></div>
+        <div class="temp-zone" id="tempZone"></div>
+        <div class="temp-bar" id="tempBar" role="slider" tabindex="0" aria-valuemin="35" aria-valuemax="41">
+          <div class="temp-track" id="tempTrack"></div>
+          <div class="temp-thumb" id="tempThumb"></div>
+        </div>
+        <div class="temp-scale" id="tempScale"></div>
+        <div class="temp-steps">
+          <button type="button" class="temp-step" id="tempDown">−</button>
+          <span class="temp-step-hint">0.1 °C</span>
+          <button type="button" class="temp-step" id="tempUp">+</button>
+        </div>
+      </div>
+      <div id="sleepField" class="full" style="display:none">
+        <label data-i18n="labelSleepHow"></label>
+        <div class="sleep-readout"><b id="sleepH">1</b><span>h</span><b id="sleepM">30</b><span>m</span></div>
+        <div class="temp-bar" id="sleepBar" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="720">
+          <div class="temp-track"><div class="sleep-fill" id="sleepFill"></div></div>
+          <div class="temp-thumb" id="sleepThumb"></div>
+        </div>
+        <div class="temp-scale" id="sleepScale"></div>
+        <div class="temp-steps">
+          <button type="button" class="temp-step" id="sleepDown" data-i18n-aria="sleepLess">−</button>
+          <span class="temp-step-hint">15 min</span>
+          <button type="button" class="temp-step" id="sleepUp" data-i18n-aria="sleepMore">+</button>
+        </div>
+      </div>
       <div class="full"><label data-i18n="labelDetail"></label><textarea id="detail"></textarea></div>
-      <div class="full"><label data-i18n="labelNotes"></label><input id="notes" type="text"></div>
     </div>
     <div class="actions">
       <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline"></button>
@@ -150,15 +221,188 @@ function setChoice(value) {
   });
 }
 
+// Temperature: a bar across the range a person can actually run. Anything
+// outside 35-41 belongs in the notes, not on a slider.
+const TEMP_MIN = 350, TEMP_MAX = 410;
+const TEMP_BANDS = [
+  { to: 359, key: "tempLow",    fill: "#bfdbfe", ink: "#1d4ed8" },
+  { to: 372, key: "tempNormal", fill: "#bbf7d0", ink: "#166534" },
+  { to: 379, key: "tempMild",   fill: "#fde68a", ink: "#92400e" },
+  { to: 389, key: "tempFever",  fill: "#fdba74", ink: "#b45309" },
+  { to: 999, key: "tempHigh",   fill: "#fca5a5", ink: "#991b1b" }
+];
+
+let tempTenths = 368;
+let tempTouched = false;
+
+const tempText = () => (tempTenths / 10).toFixed(1);
+const tempBand = () => TEMP_BANDS.find(b => tempTenths <= b.to);
+
+function setTemp(tenths, byHand) {
+  tempTenths = Math.max(TEMP_MIN, Math.min(TEMP_MAX, Math.round(tenths)));
+  if (byHand) tempTouched = true;
+  renderTemp();
+}
+
+function renderTemp() {
+  const band = tempBand();
+  $("tempValue").textContent = tempText();
+  $("tempZone").textContent = I18N.t(band.key);
+  $("tempZone").style.color = band.ink;
+  $("tempThumb").style.left = ((tempTenths - TEMP_MIN) / (TEMP_MAX - TEMP_MIN) * 100) + "%";
+  $("tempBar").setAttribute("aria-label", I18N.t("labelTemperature"));
+  $("tempBar").setAttribute("aria-valuenow", tempText());
+  $("tempBar").setAttribute("aria-valuetext", `${tempText()} °C`);
+  $("tempDown").setAttribute("aria-label", I18N.t("tempLower"));
+  $("tempUp").setAttribute("aria-label", I18N.t("tempRaise"));
+}
+
+function initTempPicker() {
+  let cursor = TEMP_MIN;
+  $("tempTrack").innerHTML = TEMP_BANDS.map(band => {
+    const end = Math.min(band.to, TEMP_MAX);
+    if (end < cursor) return "";
+    const width = end - cursor;
+    cursor = end;
+    return `<span style="flex:${width}; background:${band.fill}"></span>`;
+  }).join("");
+
+  // Whole degrees only - a tick every tenth would be unreadable at this width.
+  $("tempScale").innerHTML = Array.from({ length: (TEMP_MAX - TEMP_MIN) / 10 + 1 }, (_, i) => {
+    const tenths = TEMP_MIN + i * 10;
+    const pct = (tenths - TEMP_MIN) / (TEMP_MAX - TEMP_MIN) * 100;
+    const shift = pct === 0 ? "0" : pct === 100 ? "-100%" : "-50%";
+    return `<span style="left:${pct}%; transform:translateX(${shift})">${tenths / 10}</span>`;
+  }).join("");
+
+  const bar = $("tempBar");
+  const fromPointer = event => {
+    const box = bar.getBoundingClientRect();
+    const ratio = (event.clientX - box.left) / box.width;
+    return TEMP_MIN + ratio * (TEMP_MAX - TEMP_MIN);
+  };
+
+  let dragging = false;
+  bar.addEventListener("pointerdown", event => {
+    dragging = true;
+    bar.setPointerCapture(event.pointerId);
+    setTemp(fromPointer(event), true);
+  });
+  bar.addEventListener("pointermove", event => {
+    if (dragging) setTemp(fromPointer(event), true);
+  });
+  const release = () => { dragging = false; };
+  bar.addEventListener("pointerup", release);
+  bar.addEventListener("pointercancel", release);
+
+  bar.addEventListener("keydown", event => {
+    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1,
+                   PageDown: -10, PageUp: 10 }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    setTemp(tempTenths + step, true);
+  });
+
+  $("tempDown").onclick = () => setTemp(tempTenths - 1, true);
+  $("tempUp").onclick = () => setTemp(tempTenths + 1, true);
+  renderTemp();
+}
+
+// Open on the last reading rather than a generic 36.8 - the next one is
+// usually close to it. Stops once someone has moved the bar themselves.
+function seedTemp(records) {
+  if (tempTouched) return;
+  const last = records
+    .filter(r => r.type === "Temperature")
+    .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`))[0];
+  const match = last && String(last.amount).match(/(\d{2}(?:\.\d)?)/);
+  if (match) setTemp(Number(match[1]) * 10, false);
+}
+
+// Sleep is a length and nothing more: one entry, saved like any other. Whether
+// he is asleep right now is a separate status on the log page, so nothing here
+// is ever left open waiting for someone to come back and close it.
+const SLEEP_TYPE = "Sleep / Rest";
+const SLEEP_MAX = 720, SLEEP_STEP = 15;
+
+let sleepMinutes = 90;
+
+function sleepText(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!hours) return `${rest}m`;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
+}
+
+function setSleep(minutes) {
+  sleepMinutes = Math.max(0, Math.min(SLEEP_MAX, Math.round(minutes / SLEEP_STEP) * SLEEP_STEP));
+  renderSleep();
+}
+
+function renderSleep() {
+  const percent = sleepMinutes / SLEEP_MAX * 100;
+  $("sleepH").textContent = Math.floor(sleepMinutes / 60);
+  $("sleepM").textContent = String(sleepMinutes % 60).padStart(2, "0");
+  $("sleepFill").style.width = `${percent}%`;
+  $("sleepThumb").style.left = `${percent}%`;
+  $("sleepBar").setAttribute("aria-label", I18N.t("labelSleepHow"));
+  $("sleepBar").setAttribute("aria-valuenow", sleepMinutes);
+  $("sleepBar").setAttribute("aria-valuetext", sleepText(sleepMinutes));
+  $("sleepDown").setAttribute("aria-label", I18N.t("sleepLess"));
+  $("sleepUp").setAttribute("aria-label", I18N.t("sleepMore"));
+}
+
+function initSleepPicker() {
+  // Whole hours only: a tick every quarter would be unreadable at this width.
+  $("sleepScale").innerHTML = [0, 2, 4, 6, 8, 10, 12].map(hour => {
+    const percent = hour * 60 / SLEEP_MAX * 100;
+    const shift = percent === 0 ? "0" : percent === 100 ? "-100%" : "-50%";
+    return `<span style="left:${percent}%; transform:translateX(${shift})">${hour}h</span>`;
+  }).join("");
+
+  const bar = $("sleepBar");
+  const fromPointer = event => {
+    const box = bar.getBoundingClientRect();
+    return (event.clientX - box.left) / box.width * SLEEP_MAX;
+  };
+
+  let dragging = false;
+  bar.addEventListener("pointerdown", event => {
+    dragging = true;
+    bar.setPointerCapture(event.pointerId);
+    setSleep(fromPointer(event));
+  });
+  bar.addEventListener("pointermove", event => {
+    if (dragging) setSleep(fromPointer(event));
+  });
+  const release = () => { dragging = false; };
+  bar.addEventListener("pointerup", release);
+  bar.addEventListener("pointercancel", release);
+
+  bar.addEventListener("keydown", event => {
+    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    setSleep(sleepMinutes + step * SLEEP_STEP);
+  });
+
+  $("sleepDown").onclick = () => setSleep(sleepMinutes - SLEEP_STEP);
+  $("sleepUp").onclick = () => setSleep(sleepMinutes + SLEEP_STEP);
+  renderSleep();
+}
+
 function updatePlaceholder() {
   const type = $("type").value;
-  const [detail, amount] = I18N.placeholders(type);
-  $("detail").placeholder = detail;
-  $("amount").placeholder = amount;
+  $("detail").placeholder = I18N.placeholders(type)[0];
 
   const choices = choicesFor(type);
-  $("amountField").style.display = choices ? "none" : "";
+  const isTemp = type === "Temperature";
+  const isSleep = type === SLEEP_TYPE;
   $("choiceField").style.display = choices ? "" : "none";
+  $("tempField").style.display = isTemp ? "" : "none";
+  $("sleepField").style.display = isSleep ? "" : "none";
+  if (isTemp) renderTemp();
+  if (isSleep) renderSleep();
 
   if (!choices) {
     choiceValue = "";
@@ -174,19 +418,48 @@ function updatePlaceholder() {
   setChoice(choices[0].value);
 }
 
+function entryIcon(record) {
+  if (record.type === "Wellness") return I18N.wellnessEmoji(record.amount);
+  if (record.type === "Location") return I18N.locationEmoji(record.amount);
+  return I18N.typeEmoji(record.type);
+}
+
+function entryBody(record) {
+  const strong = text => `<span class="entry-value">${escapeHtml(text)}</span>`;
+  const parts = [];
+
+  if (record.type === "Wellness") parts.push(strong(I18N.wellnessLabel(record.amount)));
+  else if (record.type === "Location") parts.push(strong(I18N.locationLabel(record.amount)));
+  else if (record.amount) parts.push(strong(record.amount));
+
+  const words = [record.detail, record.notes].filter(Boolean).join("\n");
+  if (words) parts.push(escapeHtml(words));
+
+  return parts.join(" · ")
+      || `<span class="entry-bare">${escapeHtml(I18N.typeLabel(record.type))}</span>`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 async function addEntry() {
   $("formError").textContent = "";
+  const type = $("type").value;
+
+  // Stored as the same "37.2°C" string the log's chart already parses.
+  const amount = type === "Temperature" ? `${tempText()}°C`
+               : type === SLEEP_TYPE ? sleepText(sleepMinutes)
+               : choicesFor(type) ? choiceValue
+               : "";
+
   const payload = {
     date: $("date").value,
     time: $("time").value,
-    type: $("type").value,
-    amount: choicesFor($("type").value) ? choiceValue : $("amount").value.trim(),
+    type,
+    amount,
     detail: $("detail").value.trim(),
-    notes: $("notes").value.trim()
+    notes: ""
   };
 
   $("saveBtn").disabled = true;
@@ -200,9 +473,7 @@ async function addEntry() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || I18N.t("errSave"));
 
-    $("amount").value = "";
     $("detail").value = "";
-    $("notes").value = "";
     fillCurrentTime();
     await loadRecords();
   } catch (err) {
@@ -232,6 +503,7 @@ async function loadRecords() {
   }
 
   const records = await res.json();
+  seedTemp(records);
   if (!records.length) {
     $("entries").innerHTML = `<div class="empty">${escapeHtml(I18N.t("noRecordsYet"))}</div>`;
     return;
@@ -242,20 +514,13 @@ async function loadRecords() {
     .map(record => `
       <div class="entry">
         <div class="entry-head">
-          <div>
-            <span class="pill">${record.type==="Wellness"
-              ? escapeHtml(`${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`)
-              : record.type==="Location"
-              ? escapeHtml(`${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`)
-              : escapeHtml(I18N.typeLabel(record.type))}</span>
-            <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { weekday: "short", month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</div>
+          <div class="entry-line">
+            <span class="entry-icon" role="img" aria-label="${escapeHtml(I18N.typeLabel(record.type))}">${entryIcon(record)}</span>
+            <span class="entry-when">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</span>
           </div>
           <button class="danger" onclick="deleteEntry('${record.id}')">${escapeHtml(I18N.t("deleteBtn"))}</button>
         </div>
-        ${record.detail ? `<div class="detail">${escapeHtml(record.detail)}</div>` : ""}
-        ${record.amount && record.type !== "Wellness" && record.type !== "Location"
-          ? `<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>` : ""}
-        ${record.notes ? `<div class="meta">${escapeHtml(record.notes)}</div>` : ""}
+        <div class="entry-body">${entryBody(record)}</div>
       </div>
     `).join("");
 }
@@ -267,6 +532,8 @@ window.onLanguageChange = () => {
 
 I18N.applyStatic();
 fillCurrentTime();
+initTempPicker();
+initSleepPicker();
 updatePlaceholder();
 loadRecords().catch(err => {
   $("entries").innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;

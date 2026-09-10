@@ -9,12 +9,24 @@ const VALID_TYPES = new Set([
   "Symptoms",
   "Location",
   "Wellness",
+  "Note",
   "Other",
 ]);
 
 // Location is a state with duration, not a one-off event: each record marks a
 // change, and the page shows the most recent one as the current status.
 const LOCATION_VALUES = new Set(["Home", "Hospital"]);
+
+const SLEEP_TYPE = "Sleep / Rest";
+
+// A sleep is stored as its length, so every one of them can be counted.
+const SLEEP_DURATION = /^(?:(\d{1,3})h)?(?:\s*(\d{1,2})m)?$/;
+
+function sleepMinutes(amount) {
+  const parts = SLEEP_DURATION.exec(amount);
+  if (!parts || (!parts[1] && !parts[2])) return null;
+  return Number(parts[1] || 0) * 60 + Number(parts[2] || 0);
+}
 
 // 1-5 wellness scale. Stored as a number so it can be charted; the emoji and
 // the wording live in the client dictionary.
@@ -126,7 +138,7 @@ function loginPage(message = "") {
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dad Care">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Dad Care Log · 爸爸照护记录</title>
+<title>Dad Care Log · 爸爸照護記錄</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -149,12 +161,12 @@ function loginPage(message = "") {
 <body>
   <form class="card" method="POST" action="/login">
     <h1>Dad Care Log</h1>
-    <div class="zh-title">爸爸照护记录</div>
-    <p>Enter your family password to continue.<br><span class="zh">请输入家庭密码以继续。</span></p>
+    <div class="zh-title">爸爸照護記錄</div>
+    <p>Enter your family password to continue.<br><span class="zh">請輸入家庭密碼以繼續。</span></p>
     ${message ? `<div class="err">${message}</div>` : ""}
-    <label for="password">Password · 密码</label>
+    <label for="password">Password · 密碼</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required>
-    <button type="submit">Sign in · 登录</button>
+    <button type="submit">Sign in · 登入</button>
   </form>
 </body>
 </html>`,
@@ -194,7 +206,7 @@ export default {
         else if (await passwordMatches(supplied, env.VIEWER_PASSWORD)) role = "viewer";
 
         if (!role) {
-          return loginPage("That password is not correct. · 密码不正确。");
+          return loginPage("That password is not correct. · 密碼不正確。");
         }
 
         return new Response(null, {
@@ -250,7 +262,7 @@ export default {
 
     if (url.pathname === "/editor" || url.pathname === "/editor.html") {
       if (role !== "editor") {
-        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
       }
       // Ask the asset router for the extension-less path it canonicalizes to,
       // otherwise it 307s back to /editor and we loop.
@@ -262,7 +274,7 @@ export default {
       const isWrite = request.method !== "GET" && request.method !== "HEAD";
 
       if (isWrite && role !== "editor") {
-        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
       }
 
       const id = env.CARE_ROOM.idFromName("dad-care-room");
@@ -373,10 +385,20 @@ export class CareRoom extends DurableObject {
       return json({ error: "Wellness must be 1 to 5" }, 400);
     }
 
+    // Keeps every new sleep countable. Records written before the picker
+    // existed keep whatever text they have - this only guards new writes.
+    if (type === SLEEP_TYPE && amount && sleepMinutes(amount) === null) {
+      return json({ error: "Sleep must be a length like 1h 30m" }, 400);
+    }
+
     if (!amount && !detail) {
       return json({ error: "Please record what happened" }, 400);
     }
 
+    return json(this.insertRecord({ date, time, type, amount, detail, notes }), 201);
+  }
+
+  insertRecord({ date, time, type, amount, detail = "", notes = "" }) {
     const record = {
       id: crypto.randomUUID(),
       date,
@@ -403,7 +425,7 @@ export class CareRoom extends DurableObject {
     );
 
     this.broadcast({ event: "record_added", record });
-    return json(record, 201);
+    return record;
   }
 
   deleteRecord(id) {
