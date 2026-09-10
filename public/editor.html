@@ -30,9 +30,10 @@
     .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .full { grid-column:1/-1; }
-    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
-    input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
-    textarea { min-height:76px; resize:vertical; }
+    label { display:block; font-size:14px; color:var(--muted); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:11px 12px; border:1px solid var(--line);
+                            border-radius:10px; font:inherit; font-size:17px; }
+    textarea { min-height:92px; resize:vertical; line-height:1.5; }
     button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
     .primary { background:var(--accent); color:#fff; }
@@ -42,6 +43,12 @@
     .entry-list { display:flex; flex-direction:column; gap:12px; }
     .entry { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
     .entry-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .entry-line { display:flex; align-items:center; gap:9px; }
+    .entry-icon { font-size:21px; line-height:1.2; }
+    .entry-when { font-size:15px; color:var(--muted); font-variant-numeric:tabular-nums; }
+    .entry-body { font-size:17px; line-height:1.5; margin-top:7px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .entry-value { font-weight:700; }
+    .entry-bare { color:var(--muted); }
     .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:var(--soft); font-size:12px; font-weight:700; }
     .detail { margin-top:8px; line-height:1.5; white-space:pre-wrap; }
     .meta { font-size:13px; margin-top:7px; }
@@ -83,38 +90,14 @@
     .temp-step:active { background:var(--soft); }
     .temp-step-hint { font-size:12px; color:var(--muted); min-width:48px; text-align:center; }
 
-    /* Sleep has two ways in: tap when he drops off and again when he wakes,
-       or fill in both ends afterwards. Only one of them is on screen at a
-       time, so nobody has to work out which one they are using. */
-    .sleep-live { border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--soft); }
-    .sleep-big { width:100%; border:0; border-radius:12px; padding:16px; font:inherit; font-size:16px;
-                 font-weight:600; background:var(--accent); color:#fff; }
-    .sleep-big.wake { background:#fff; color:var(--text); border:1px solid #d1d5db; }
-    .sleep-hint { text-align:center; font-size:12px; color:var(--muted); margin-top:9px; }
-    .sleep-since { text-align:center; font-size:13px; color:var(--muted); margin-bottom:10px; }
-    .sleep-dot { display:inline-block; width:7px; height:7px; border-radius:50%;
-                 background:var(--accent); margin-right:6px; vertical-align:middle; }
-    .sleep-elapsed { display:flex; align-items:baseline; justify-content:center; gap:2px;
-                     font-variant-numeric:tabular-nums; margin-bottom:12px; }
-    .sleep-elapsed b { font-size:38px; font-weight:600; line-height:1; letter-spacing:-.02em; }
-    .sleep-elapsed span { font-size:17px; color:var(--muted); margin-right:6px; }
-    .sleep-cancel { display:block; margin:10px auto 0; border:0; background:none; color:var(--muted);
-                    font:inherit; font-size:13px; text-decoration:underline; padding:4px; }
-    .sleep-warn { margin-top:10px; font-size:12px; color:#92400e; background:#fef3c7;
-                  border-radius:8px; padding:8px 10px; text-align:center; }
-    .sleep-or { display:block; font-size:13px; color:var(--muted); margin:16px 0 8px; }
-    .sleep-times { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:end; }
-    .sleep-times label { margin-bottom:4px; }
-    .sleep-arrow { padding-bottom:11px; color:var(--muted); }
-    .sleep-total { text-align:center; font-size:15px; font-weight:600; margin-top:10px;
-                   font-variant-numeric:tabular-nums; }
-    .sleep-overnight { margin-top:8px; font-size:12px; color:#92400e; background:#fef3c7;
-                       border-radius:8px; padding:7px 10px; text-align:center; }
-    .sleep-chips { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px; }
-    .sleep-chip { border:1px solid var(--line); background:var(--soft); border-radius:12px;
-                  padding:11px 4px; font-size:14px; font-weight:600; color:var(--text);
-                  font-variant-numeric:tabular-nums; }
-    .sleep-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+    /* Sleep is just a length, so it borrows the temperature bar wholesale and
+       only adds the filled portion and its own readout. */
+    .sleep-readout { display:flex; align-items:baseline; justify-content:center; gap:2px;
+                     font-variant-numeric:tabular-nums; }
+    .sleep-readout b { font-size:42px; font-weight:600; line-height:1; letter-spacing:-.02em; }
+    .sleep-readout span { font-size:17px; color:var(--muted); margin-right:7px; }
+    .sleep-fill { position:absolute; left:0; top:0; bottom:0; background:#c7d2fe; }
+
     .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
     .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
     .lang-tab.active { background:var(--accent); color:#fff; }
@@ -152,10 +135,10 @@
           <option value="Sleep / Rest" data-i18n-type="Sleep / Rest"></option>
           <option value="Symptoms" data-i18n-type="Symptoms"></option>
           <option value="Wellness" data-i18n-type="Wellness"></option>
+          <option value="Note" data-i18n-type="Note"></option>
           <option value="Other" data-i18n-type="Other"></option>
         </select>
       </div>
-      <div id="amountField"><label data-i18n="labelAmount"></label><input id="amount" type="text"></div>
       <div id="choiceField" style="display:none">
         <label id="choiceLabel"></label>
         <div id="choiceButtons" class="choice-row"></div>
@@ -176,35 +159,20 @@
         </div>
       </div>
       <div id="sleepField" class="full" style="display:none">
-        <label data-i18n="labelSleep"></label>
-        <div class="sleep-live">
-          <div id="sleepIdle">
-            <button type="button" class="sleep-big" id="sleepStart" data-i18n="sleepAsleepNow"></button>
-            <div class="sleep-hint" data-i18n="sleepNowHint"></div>
-          </div>
-          <div id="sleepRunning" hidden>
-            <div class="sleep-since"><span class="sleep-dot"></span><span id="sleepSince"></span></div>
-            <div class="sleep-elapsed"><b id="sleepH">0</b><span>h</span><b id="sleepM">00</b><span>m</span></div>
-            <button type="button" class="sleep-big wake" id="sleepStop" data-i18n="sleepWokeNow"></button>
-            <button type="button" class="sleep-cancel" id="sleepCancel" data-i18n="sleepCancel"></button>
-            <div class="sleep-warn" id="sleepWarn" hidden data-i18n="sleepStillRunning"></div>
-          </div>
+        <label data-i18n="labelSleepHow"></label>
+        <div class="sleep-readout"><b id="sleepH">1</b><span>h</span><b id="sleepM">30</b><span>m</span></div>
+        <div class="temp-bar" id="sleepBar" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="720">
+          <div class="temp-track"><div class="sleep-fill" id="sleepFill"></div></div>
+          <div class="temp-thumb" id="sleepThumb"></div>
         </div>
-        <div id="sleepManual">
-          <label class="sleep-or" data-i18n="sleepFinished"></label>
-          <div class="sleep-times">
-            <div><label for="sleepFrom" data-i18n="sleepFellAsleep"></label><input id="sleepFrom" type="time"></div>
-            <div class="sleep-arrow">→</div>
-            <div><label for="sleepTo" data-i18n="sleepWokeUp"></label><input id="sleepTo" type="time"></div>
-          </div>
-          <div class="sleep-total" id="sleepTotal"></div>
-          <div class="sleep-overnight" id="sleepOvernight" hidden data-i18n="sleepOvernight"></div>
-          <label class="sleep-or" data-i18n="sleepQuick"></label>
-          <div class="sleep-chips" id="sleepChips"></div>
+        <div class="temp-scale" id="sleepScale"></div>
+        <div class="temp-steps">
+          <button type="button" class="temp-step" id="sleepDown" data-i18n-aria="sleepLess">−</button>
+          <span class="temp-step-hint">15 min</span>
+          <button type="button" class="temp-step" id="sleepUp" data-i18n-aria="sleepMore">+</button>
         </div>
       </div>
       <div class="full"><label data-i18n="labelDetail"></label><textarea id="detail"></textarea></div>
-      <div class="full"><label data-i18n="labelNotes"></label><input id="notes" type="text"></div>
     </div>
     <div class="actions">
       <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline"></button>
@@ -351,16 +319,13 @@ function seedTemp(records) {
   if (match) setTemp(Number(match[1]) * 10, false);
 }
 
-// Sleep, like Location, is a state with a duration rather than a one-off
-// event. An open session is a real record, so everyone's page already shows
-// it live; waking replaces it with the finished length, and a stored sleep
-// only ever has the one shape.
+// Sleep is a length and nothing more: one entry, saved like any other. Whether
+// he is asleep right now is a separate status on the log page, so nothing here
+// is ever left open waiting for someone to come back and close it.
 const SLEEP_TYPE = "Sleep / Rest";
-const SLEEP_OPEN = "Asleep";
-const SLEEP_CHIPS = [15, 30, 45, 60, 90, 120, 180, 240];
+const SLEEP_MAX = 720, SLEEP_STEP = 15;
 
-let sleepSession = null;
-let sleepTimer = null;
+let sleepMinutes = 90;
 
 function sleepText(minutes) {
   const hours = Math.floor(minutes / 60);
@@ -369,139 +334,75 @@ function sleepText(minutes) {
   return rest ? `${hours}h ${rest}m` : `${hours}h`;
 }
 
-const minutesOfDay = value => {
-  const [h, m] = value.split(":").map(Number);
-  return h * 60 + m;
-};
-
-// Waking "before" he fell asleep means he slept through midnight.
-function sleepSpan() {
-  const from = $("sleepFrom").value, to = $("sleepTo").value;
-  if (!from || !to) return null;
-
-  let span = minutesOfDay(to) - minutesOfDay(from);
-  const overnight = span <= 0;
-  if (overnight) span += 24 * 60;
-
-  return { span, overnight };
-}
-
-function sleepElapsed() {
-  const [y, mo, d] = sleepSession.date.split("-").map(Number);
-  const [h, mi] = sleepSession.time.split(":").map(Number);
-  const start = new Date(y, mo - 1, d, h, mi).getTime();
-  return Math.max(0, Math.round((Date.now() - start) / 60000));
-}
-
-function renderSleepClock() {
-  if (!sleepSession) return;
-  const minutes = sleepElapsed();
-  $("sleepH").textContent = Math.floor(minutes / 60);
-  $("sleepM").textContent = String(minutes % 60).padStart(2, "0");
-  $("sleepWarn").hidden = minutes < 12 * 60;
+function setSleep(minutes) {
+  sleepMinutes = Math.max(0, Math.min(SLEEP_MAX, Math.round(minutes / SLEEP_STEP) * SLEEP_STEP));
+  renderSleep();
 }
 
 function renderSleep() {
-  clearInterval(sleepTimer);
-  sleepTimer = null;
-
-  $("sleepIdle").hidden = Boolean(sleepSession);
-  $("sleepRunning").hidden = !sleepSession;
-  $("sleepManual").style.display = sleepSession ? "none" : "";
-
-  if (sleepSession) {
-    $("sleepSince").textContent =
-      `${I18N.t("sleepAsleepSince")} ${I18N.displayTime(sleepSession.time)}`;
-    renderSleepClock();
-    sleepTimer = setInterval(renderSleepClock, 30000);
-    return;
-  }
-
-  const span = sleepSpan();
-  $("sleepTotal").textContent = span ? sleepText(span.span) : "";
-  $("sleepOvernight").hidden = !span?.overnight;
-  document.querySelectorAll("#sleepChips .sleep-chip").forEach(chip => {
-    chip.classList.toggle("active", span && Number(chip.dataset.minutes) === span.span);
-  });
-}
-
-// While he is marked asleep, waking is what saves the entry - the normal
-// button would file a second, separate record for the same sleep.
-function syncSaveButton() {
-  $("saveBtn").style.display = $("type").value === SLEEP_TYPE && sleepSession ? "none" : "";
-}
-
-async function sleepAction(path, errorKey) {
-  const now = new Date();
-  $("formError").textContent = "";
-
-  try {
-    const res = await fetch(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        date: toDateString(now),
-        time: `${pad(now.getHours())}:${pad(now.getMinutes())}`
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || I18N.t(errorKey));
-  } catch (err) {
-    $("formError").textContent = err.message;
-  }
-
-  // Someone else may have closed it from their phone while this page sat
-  // open, so redraw from what the server actually holds either way.
-  await loadRecords();
+  const percent = sleepMinutes / SLEEP_MAX * 100;
+  $("sleepH").textContent = Math.floor(sleepMinutes / 60);
+  $("sleepM").textContent = String(sleepMinutes % 60).padStart(2, "0");
+  $("sleepFill").style.width = `${percent}%`;
+  $("sleepThumb").style.left = `${percent}%`;
+  $("sleepBar").setAttribute("aria-label", I18N.t("labelSleepHow"));
+  $("sleepBar").setAttribute("aria-valuenow", sleepMinutes);
+  $("sleepBar").setAttribute("aria-valuetext", sleepText(sleepMinutes));
+  $("sleepDown").setAttribute("aria-label", I18N.t("sleepLess"));
+  $("sleepUp").setAttribute("aria-label", I18N.t("sleepMore"));
 }
 
 function initSleepPicker() {
-  $("sleepChips").innerHTML = SLEEP_CHIPS.map(m =>
-    `<button type="button" class="sleep-chip" data-minutes="${m}">${sleepText(m)}</button>`
-  ).join("");
+  // Whole hours only: a tick every quarter would be unreadable at this width.
+  $("sleepScale").innerHTML = [0, 2, 4, 6, 8, 10, 12].map(hour => {
+    const percent = hour * 60 / SLEEP_MAX * 100;
+    const shift = percent === 0 ? "0" : percent === 100 ? "-100%" : "-50%";
+    return `<span style="left:${percent}%; transform:translateX(${shift})">${hour}h</span>`;
+  }).join("");
 
-  // A chip moves the waking time, so the two ends stay the only source of
-  // truth and the chips can never disagree with them.
-  $("sleepChips").addEventListener("click", event => {
-    const chip = event.target.closest(".sleep-chip");
-    if (!chip || !$("sleepFrom").value) return;
-    const end = (minutesOfDay($("sleepFrom").value) + Number(chip.dataset.minutes)) % (24 * 60);
-    $("sleepTo").value = `${pad(Math.floor(end / 60))}:${pad(end % 60)}`;
-    renderSleep();
+  const bar = $("sleepBar");
+  const fromPointer = event => {
+    const box = bar.getBoundingClientRect();
+    return (event.clientX - box.left) / box.width * SLEEP_MAX;
+  };
+
+  let dragging = false;
+  bar.addEventListener("pointerdown", event => {
+    dragging = true;
+    bar.setPointerCapture(event.pointerId);
+    setSleep(fromPointer(event));
+  });
+  bar.addEventListener("pointermove", event => {
+    if (dragging) setSleep(fromPointer(event));
+  });
+  const release = () => { dragging = false; };
+  bar.addEventListener("pointerup", release);
+  bar.addEventListener("pointercancel", release);
+
+  bar.addEventListener("keydown", event => {
+    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    setSleep(sleepMinutes + step * SLEEP_STEP);
   });
 
-  $("sleepFrom").oninput = $("sleepTo").oninput = renderSleep;
-  $("sleepStart").onclick = () => sleepAction("/api/sleep/start", "errSleepStart");
-  $("sleepStop").onclick = () => sleepAction("/api/sleep/stop", "errSleepStop");
-  $("sleepCancel").onclick = async () => {
-    if (sleepSession) await deleteEntry(sleepSession.id, true);
-  };
-}
-
-// An hour ago until now: the shape of most naps someone logs after the fact.
-function fillSleepTimes() {
-  const now = new Date();
-  const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-  $("sleepTo").value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  $("sleepFrom").value = `${pad(hourAgo.getHours())}:${pad(hourAgo.getMinutes())}`;
+  $("sleepDown").onclick = () => setSleep(sleepMinutes - SLEEP_STEP);
+  $("sleepUp").onclick = () => setSleep(sleepMinutes + SLEEP_STEP);
+  renderSleep();
 }
 
 function updatePlaceholder() {
   const type = $("type").value;
-  const [detail, amount] = I18N.placeholders(type);
-  $("detail").placeholder = detail;
-  $("amount").placeholder = amount;
+  $("detail").placeholder = I18N.placeholders(type)[0];
 
   const choices = choicesFor(type);
   const isTemp = type === "Temperature";
   const isSleep = type === SLEEP_TYPE;
-  $("amountField").style.display = choices || isTemp || isSleep ? "none" : "";
   $("choiceField").style.display = choices ? "" : "none";
   $("tempField").style.display = isTemp ? "" : "none";
   $("sleepField").style.display = isSleep ? "" : "none";
   if (isTemp) renderTemp();
   if (isSleep) renderSleep();
-  syncSaveButton();
 
   if (!choices) {
     choiceValue = "";
@@ -517,6 +418,27 @@ function updatePlaceholder() {
   setChoice(choices[0].value);
 }
 
+function entryIcon(record) {
+  if (record.type === "Wellness") return I18N.wellnessEmoji(record.amount);
+  if (record.type === "Location") return I18N.locationEmoji(record.amount);
+  return I18N.typeEmoji(record.type);
+}
+
+function entryBody(record) {
+  const strong = text => `<span class="entry-value">${escapeHtml(text)}</span>`;
+  const parts = [];
+
+  if (record.type === "Wellness") parts.push(strong(I18N.wellnessLabel(record.amount)));
+  else if (record.type === "Location") parts.push(strong(I18N.locationLabel(record.amount)));
+  else if (record.amount) parts.push(strong(record.amount));
+
+  const words = [record.detail, record.notes].filter(Boolean).join("\n");
+  if (words) parts.push(escapeHtml(words));
+
+  return parts.join(" · ")
+      || `<span class="entry-bare">${escapeHtml(I18N.typeLabel(record.type))}</span>`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
@@ -524,28 +446,20 @@ function escapeHtml(value) {
 async function addEntry() {
   $("formError").textContent = "";
   const type = $("type").value;
-  const span = type === SLEEP_TYPE ? sleepSpan() : null;
-
-  if (type === SLEEP_TYPE && !span) {
-    $("formError").textContent = I18N.t("errSleepTimes");
-    return;
-  }
 
   // Stored as the same "37.2°C" string the log's chart already parses.
   const amount = type === "Temperature" ? `${tempText()}°C`
-               : type === SLEEP_TYPE ? sleepText(span.span)
+               : type === SLEEP_TYPE ? sleepText(sleepMinutes)
                : choicesFor(type) ? choiceValue
-               : $("amount").value.trim();
+               : "";
 
   const payload = {
     date: $("date").value,
-    // A sleep is timed by when it started, so it sits on the timeline where
-    // it happened rather than whenever someone got round to typing it.
-    time: type === SLEEP_TYPE ? $("sleepFrom").value : $("time").value,
+    time: $("time").value,
     type,
     amount,
     detail: $("detail").value.trim(),
-    notes: $("notes").value.trim()
+    notes: ""
   };
 
   $("saveBtn").disabled = true;
@@ -559,11 +473,8 @@ async function addEntry() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || I18N.t("errSave"));
 
-    $("amount").value = "";
     $("detail").value = "";
-    $("notes").value = "";
     fillCurrentTime();
-    fillSleepTimes();
     await loadRecords();
   } catch (err) {
     $("formError").textContent = err.message;
@@ -572,8 +483,8 @@ async function addEntry() {
   }
 }
 
-async function deleteEntry(id, skipConfirm) {
-  if (!skipConfirm && !confirm(I18N.t("confirmDelete"))) return;
+async function deleteEntry(id) {
+  if (!confirm(I18N.t("confirmDelete"))) return;
   const res = await fetch(`/api/records/${encodeURIComponent(id)}`, { method: "DELETE" });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -593,9 +504,6 @@ async function loadRecords() {
 
   const records = await res.json();
   seedTemp(records);
-  sleepSession = records.find(r => r.type === SLEEP_TYPE && r.amount === SLEEP_OPEN) || null;
-  if ($("type").value === SLEEP_TYPE) renderSleep();
-  syncSaveButton();
   if (!records.length) {
     $("entries").innerHTML = `<div class="empty">${escapeHtml(I18N.t("noRecordsYet"))}</div>`;
     return;
@@ -606,23 +514,13 @@ async function loadRecords() {
     .map(record => `
       <div class="entry">
         <div class="entry-head">
-          <div>
-            <span class="pill">${record.type==="Wellness"
-              ? escapeHtml(`${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`)
-              : record.type==="Location"
-              ? escapeHtml(`${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`)
-              : record.type===SLEEP_TYPE && record.amount===SLEEP_OPEN
-              ? escapeHtml(`${I18N.t("sleepAsleepSince")} ${I18N.displayTime(record.time)}`)
-              : escapeHtml(I18N.typeLabel(record.type))}</span>
-            <div class="meta">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { weekday: "short", month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</div>
+          <div class="entry-line">
+            <span class="entry-icon" role="img" aria-label="${escapeHtml(I18N.typeLabel(record.type))}">${entryIcon(record)}</span>
+            <span class="entry-when">${escapeHtml(parseLocalDate(record.date).toLocaleDateString(I18N.locale(), { month: "short", day: "numeric" }))}${escapeHtml(I18N.t("atTime"))}${escapeHtml(I18N.displayTime(record.time))}</span>
           </div>
           <button class="danger" onclick="deleteEntry('${record.id}')">${escapeHtml(I18N.t("deleteBtn"))}</button>
         </div>
-        ${record.detail ? `<div class="detail">${escapeHtml(record.detail)}</div>` : ""}
-        ${record.amount && record.type !== "Wellness" && record.type !== "Location"
-          && !(record.type === SLEEP_TYPE && record.amount === SLEEP_OPEN)
-          ? `<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>` : ""}
-        ${record.notes ? `<div class="meta">${escapeHtml(record.notes)}</div>` : ""}
+        <div class="entry-body">${entryBody(record)}</div>
       </div>
     `).join("");
 }
@@ -636,7 +534,6 @@ I18N.applyStatic();
 fillCurrentTime();
 initTempPicker();
 initSleepPicker();
-fillSleepTimes();
 updatePlaceholder();
 loadRecords().catch(err => {
   $("entries").innerHTML = `<div class="empty">${escapeHtml(err.message)}</div>`;

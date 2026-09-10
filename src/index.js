@@ -9,6 +9,7 @@ const VALID_TYPES = new Set([
   "Symptoms",
   "Location",
   "Wellness",
+  "Note",
   "Other",
 ]);
 
@@ -18,34 +19,13 @@ const LOCATION_VALUES = new Set(["Home", "Hospital"]);
 
 const SLEEP_TYPE = "Sleep / Rest";
 
-// A sleep someone is still having is a normal record carrying this marker as
-// its amount. That way every client already receives it over the socket and
-// already renders it in the timeline - no second channel to keep in sync. It
-// never survives: waking replaces it with the finished duration, so a stored
-// sleep only ever has one shape.
-const SLEEP_OPEN = "Asleep";
+// A sleep is stored as its length, so every one of them can be counted.
 const SLEEP_DURATION = /^(?:(\d{1,3})h)?(?:\s*(\d{1,2})m)?$/;
 
 function sleepMinutes(amount) {
   const parts = SLEEP_DURATION.exec(amount);
   if (!parts || (!parts[1] && !parts[2])) return null;
   return Number(parts[1] || 0) * 60 + Number(parts[2] || 0);
-}
-
-function formatSleep(minutes) {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (!hours) return `${rest}m`;
-  return rest ? `${hours}h ${rest}m` : `${hours}h`;
-}
-
-// Every time in this app is the family's local wall clock, never UTC - the
-// Worker's own clock is in the wrong timezone and is never consulted. Reading
-// both ends as UTC cancels the offset out and leaves the elapsed minutes.
-function wallClock(date, time) {
-  const [year, month, day] = date.split("-").map(Number);
-  const [hour, minute] = time.split(":").map(Number);
-  return Date.UTC(year, month - 1, day, hour, minute);
 }
 
 // 1-5 wellness scale. Stored as a number so it can be charted; the emoji and
@@ -158,7 +138,7 @@ function loginPage(message = "") {
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dad Care">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Dad Care Log · 爸爸照护记录</title>
+<title>Dad Care Log · 爸爸照護記錄</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -181,12 +161,12 @@ function loginPage(message = "") {
 <body>
   <form class="card" method="POST" action="/login">
     <h1>Dad Care Log</h1>
-    <div class="zh-title">爸爸照护记录</div>
-    <p>Enter your family password to continue.<br><span class="zh">请输入家庭密码以继续。</span></p>
+    <div class="zh-title">爸爸照護記錄</div>
+    <p>Enter your family password to continue.<br><span class="zh">請輸入家庭密碼以繼續。</span></p>
     ${message ? `<div class="err">${message}</div>` : ""}
-    <label for="password">Password · 密码</label>
+    <label for="password">Password · 密碼</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required>
-    <button type="submit">Sign in · 登录</button>
+    <button type="submit">Sign in · 登入</button>
   </form>
 </body>
 </html>`,
@@ -226,7 +206,7 @@ export default {
         else if (await passwordMatches(supplied, env.VIEWER_PASSWORD)) role = "viewer";
 
         if (!role) {
-          return loginPage("That password is not correct. · 密码不正确。");
+          return loginPage("That password is not correct. · 密碼不正確。");
         }
 
         return new Response(null, {
@@ -282,7 +262,7 @@ export default {
 
     if (url.pathname === "/editor" || url.pathname === "/editor.html") {
       if (role !== "editor") {
-        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
       }
       // Ask the asset router for the extension-less path it canonicalizes to,
       // otherwise it 307s back to /editor and we loop.
@@ -294,7 +274,7 @@ export default {
       const isWrite = request.method !== "GET" && request.method !== "HEAD";
 
       if (isWrite && role !== "editor") {
-        return json({ error: "This password is view-only. · 此密码仅可查看。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
       }
 
       const id = env.CARE_ROOM.idFromName("dad-care-room");
@@ -341,14 +321,6 @@ export class CareRoom extends DurableObject {
 
     if (url.pathname === "/api/records" && request.method === "POST") {
       return this.createRecord(request);
-    }
-
-    if (url.pathname === "/api/sleep/start" && request.method === "POST") {
-      return this.startSleep(request);
-    }
-
-    if (url.pathname === "/api/sleep/stop" && request.method === "POST") {
-      return this.stopSleep(request);
     }
 
     if (url.pathname.startsWith("/api/records/") && request.method === "DELETE") {
@@ -454,85 +426,6 @@ export class CareRoom extends DurableObject {
 
     this.broadcast({ event: "record_added", record });
     return record;
-  }
-
-  // The sleep he is still having, if there is one.
-  openSleep() {
-    return this.ctx.storage.sql.exec(
-      `SELECT id, date, time, detail, notes
-       FROM records
-       WHERE type = ? AND amount = ?
-       ORDER BY date DESC, time DESC, created_at DESC
-       LIMIT 1`,
-      SLEEP_TYPE,
-      SLEEP_OPEN
-    ).toArray()[0] || null;
-  }
-
-  // The page sends its own clock, the same as every other record does.
-  async whenFrom(request) {
-    let body;
-
-    try {
-      body = await request.json();
-    } catch {
-      return null;
-    }
-
-    const date = String(body.date || "");
-    const time = String(body.time || "");
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-    if (!/^\d{2}:\d{2}$/.test(time)) return null;
-
-    return { date, time };
-  }
-
-  async startSleep(request) {
-    const when = await this.whenFrom(request);
-    if (!when) return json({ error: "Invalid date or time" }, 400);
-
-    // One sleep at a time. Two people tapping at once is the normal case here,
-    // not an edge case, and the second tap should not open a second session.
-    if (this.openSleep()) {
-      return json({ error: "He is already marked asleep" }, 409);
-    }
-
-    return json(this.insertRecord({ ...when, type: SLEEP_TYPE, amount: SLEEP_OPEN }), 201);
-  }
-
-  // Closing is one call rather than a delete plus a post from the page, so two
-  // people tapping "he woke up" together cannot produce two records: this
-  // object handles one request at a time, and the second finds nothing open.
-  async stopSleep(request) {
-    const when = await this.whenFrom(request);
-    if (!when) return json({ error: "Invalid date or time" }, 400);
-
-    const open = this.openSleep();
-    if (!open) return json({ error: "No sleep is open" }, 409);
-
-    const minutes = Math.round(
-      (wallClock(when.date, when.time) - wallClock(open.date, open.time)) / 60000
-    );
-
-    if (minutes < 0) {
-      return json({ error: "He cannot wake before falling asleep" }, 400);
-    }
-
-    this.ctx.storage.sql.exec("DELETE FROM records WHERE id = ?", open.id);
-    this.broadcast({ event: "record_deleted", id: open.id });
-
-    // Timed at the moment he fell asleep, so the nap sits where it happened.
-    const record = this.insertRecord({
-      date: open.date,
-      time: open.time,
-      type: SLEEP_TYPE,
-      amount: formatSleep(Math.max(minutes, 1)),
-      detail: open.detail,
-      notes: open.notes,
-    });
-
-    return json(record, 201);
   }
 
   deleteRecord(id) {
