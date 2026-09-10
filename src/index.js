@@ -16,6 +16,38 @@ const VALID_TYPES = new Set([
 // change, and the page shows the most recent one as the current status.
 const LOCATION_VALUES = new Set(["Home", "Hospital"]);
 
+const SLEEP_TYPE = "Sleep / Rest";
+
+// A sleep someone is still having is a normal record carrying this marker as
+// its amount. That way every client already receives it over the socket and
+// already renders it in the timeline - no second channel to keep in sync. It
+// never survives: waking replaces it with the finished duration, so a stored
+// sleep only ever has one shape.
+const SLEEP_OPEN = "Asleep";
+const SLEEP_DURATION = /^(?:(\d{1,3})h)?(?:\s*(\d{1,2})m)?$/;
+
+function sleepMinutes(amount) {
+  const parts = SLEEP_DURATION.exec(amount);
+  if (!parts || (!parts[1] && !parts[2])) return null;
+  return Number(parts[1] || 0) * 60 + Number(parts[2] || 0);
+}
+
+function formatSleep(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!hours) return `${rest}m`;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
+}
+
+// Every time in this app is the family's local wall clock, never UTC - the
+// Worker's own clock is in the wrong timezone and is never consulted. Reading
+// both ends as UTC cancels the offset out and leaves the elapsed minutes.
+function wallClock(date, time) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  return Date.UTC(year, month - 1, day, hour, minute);
+}
+
 // 1-5 wellness scale. Stored as a number so it can be charted; the emoji and
 // the wording live in the client dictionary.
 const WELLNESS_VALUES = new Set(["1", "2", "3", "4", "5"]);
@@ -311,6 +343,14 @@ export class CareRoom extends DurableObject {
       return this.createRecord(request);
     }
 
+    if (url.pathname === "/api/sleep/start" && request.method === "POST") {
+      return this.startSleep(request);
+    }
+
+    if (url.pathname === "/api/sleep/stop" && request.method === "POST") {
+      return this.stopSleep(request);
+    }
+
     if (url.pathname.startsWith("/api/records/") && request.method === "DELETE") {
       const id = decodeURIComponent(url.pathname.slice("/api/records/".length));
       return this.deleteRecord(id);
@@ -373,10 +413,20 @@ export class CareRoom extends DurableObject {
       return json({ error: "Wellness must be 1 to 5" }, 400);
     }
 
+    // Keeps every new sleep countable. Records written before the picker
+    // existed keep whatever text they have - this only guards new writes.
+    if (type === SLEEP_TYPE && amount && sleepMinutes(amount) === null) {
+      return json({ error: "Sleep must be a length like 1h 30m" }, 400);
+    }
+
     if (!amount && !detail) {
       return json({ error: "Please record what happened" }, 400);
     }
 
+    return json(this.insertRecord({ date, time, type, amount, detail, notes }), 201);
+  }
+
+  insertRecord({ date, time, type, amount, detail = "", notes = "" }) {
     const record = {
       id: crypto.randomUUID(),
       date,
@@ -403,6 +453,85 @@ export class CareRoom extends DurableObject {
     );
 
     this.broadcast({ event: "record_added", record });
+    return record;
+  }
+
+  // The sleep he is still having, if there is one.
+  openSleep() {
+    return this.ctx.storage.sql.exec(
+      `SELECT id, date, time, detail, notes
+       FROM records
+       WHERE type = ? AND amount = ?
+       ORDER BY date DESC, time DESC, created_at DESC
+       LIMIT 1`,
+      SLEEP_TYPE,
+      SLEEP_OPEN
+    ).toArray()[0] || null;
+  }
+
+  // The page sends its own clock, the same as every other record does.
+  async whenFrom(request) {
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return null;
+    }
+
+    const date = String(body.date || "");
+    const time = String(body.time || "");
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+    if (!/^\d{2}:\d{2}$/.test(time)) return null;
+
+    return { date, time };
+  }
+
+  async startSleep(request) {
+    const when = await this.whenFrom(request);
+    if (!when) return json({ error: "Invalid date or time" }, 400);
+
+    // One sleep at a time. Two people tapping at once is the normal case here,
+    // not an edge case, and the second tap should not open a second session.
+    if (this.openSleep()) {
+      return json({ error: "He is already marked asleep" }, 409);
+    }
+
+    return json(this.insertRecord({ ...when, type: SLEEP_TYPE, amount: SLEEP_OPEN }), 201);
+  }
+
+  // Closing is one call rather than a delete plus a post from the page, so two
+  // people tapping "he woke up" together cannot produce two records: this
+  // object handles one request at a time, and the second finds nothing open.
+  async stopSleep(request) {
+    const when = await this.whenFrom(request);
+    if (!when) return json({ error: "Invalid date or time" }, 400);
+
+    const open = this.openSleep();
+    if (!open) return json({ error: "No sleep is open" }, 409);
+
+    const minutes = Math.round(
+      (wallClock(when.date, when.time) - wallClock(open.date, open.time)) / 60000
+    );
+
+    if (minutes < 0) {
+      return json({ error: "He cannot wake before falling asleep" }, 400);
+    }
+
+    this.ctx.storage.sql.exec("DELETE FROM records WHERE id = ?", open.id);
+    this.broadcast({ event: "record_deleted", id: open.id });
+
+    // Timed at the moment he fell asleep, so the nap sits where it happened.
+    const record = this.insertRecord({
+      date: open.date,
+      time: open.time,
+      type: SLEEP_TYPE,
+      amount: formatSleep(Math.max(minutes, 1)),
+      detail: open.detail,
+      notes: open.notes,
+    });
+
     return json(record, 201);
   }
 

@@ -45,6 +45,9 @@
     .subtitle { margin-bottom:22px; }
     .live { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:999px; font-size:14px; background:var(--warn-bg); color:var(--warn); height:fit-content; }
     .live.connected { background:var(--good-bg); color:var(--good); }
+    /* He is asleep right now - a state, not an event, so it belongs up here
+       beside where he is rather than only in the timeline. */
+    .live.asleep { background:#e0e7ff; color:#3730a3; }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
     .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
     /* The page tint changes with location, so this banner is separated by its
@@ -120,6 +123,7 @@
         <button type="button" class="secondary lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
         <button type="button" class="secondary lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
       </div>
+      <div id="sleepNow" class="live asleep" style="display:none"><span id="sleepNowText"></span></div>
       <div id="liveStatus" class="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
     </div>
   </div>
@@ -208,6 +212,24 @@ const parseLocalDate = s => { const [y,m,d]=s.split("-").map(Number); return new
 const startOfDay = d => new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const endOfDay = d => new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59,999);
 const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+// An unfinished sleep is a marker record: it reads as a state in the timeline
+// and disappears when he wakes, replaced by the finished length.
+const SLEEP_TYPE="Sleep / Rest", SLEEP_OPEN="Asleep";
+const isOpenSleep = record => record.type===SLEEP_TYPE && record.amount===SLEEP_OPEN;
+
+function entryHeadline(record){
+  if(isOpenSleep(record)) return `\u{1F634} ${I18N.t("sleepAsleepSince")} ${I18N.displayTime(record.time)}`;
+  if(record.type==="Wellness") return `${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`;
+  if(record.type==="Location") return `${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`;
+  return I18N.typeLabel(record.type);
+}
+
+function renderSleepNow(){
+  const open=records.find(isOpenSleep);
+  $("sleepNow").style.display=open?"":"none";
+  if(open) $("sleepNowText").textContent=`\u{1F634} ${I18N.t("sleepAsleepSince")} ${I18N.displayTime(open.time)}`;
+}
 
 function escapeHtml(value){
   return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
@@ -690,14 +712,10 @@ function renderTimeline(){
             <div class="time">${escapeHtml(I18N.displayTime(record.time))}</div>
             <div class="event-card">
               <div class="event-top">
-                <div class="event-type">${record.type==="Wellness"
-                  ? escapeHtml(`${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`)
-                  : record.type==="Location"
-                  ? escapeHtml(`${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`)
-                  : escapeHtml(I18N.typeLabel(record.type))}</div>
+                <div class="event-type">${escapeHtml(entryHeadline(record))}</div>
               </div>
               ${record.detail?`<div class="detail">${escapeHtml(record.detail)}</div>`:""}
-              ${record.amount && record.type!=="Wellness" && record.type!=="Location"
+              ${record.amount && record.type!=="Wellness" && record.type!=="Location" && !isOpenSleep(record)
                   ?`<div class="meta"><strong>${escapeHtml(I18N.t("amountDose"))}</strong> ${escapeHtml(record.amount)}</div>`:""}
               ${record.notes?`<div class="meta">${escapeHtml(record.notes)}</div>`:""}
             </div>
@@ -711,6 +729,7 @@ function renderTimeline(){
 function renderAll(){
   $("periodLabel").textContent=formatPeriodLabel();
   renderStatusBanner();
+  renderSleepNow();
   renderSummary();
   renderTemperatureChart();
   renderWellnessChart();
