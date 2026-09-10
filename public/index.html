@@ -48,6 +48,8 @@
     /* He is asleep right now - a state, not an event, so it belongs up here
        beside where he is rather than only in the timeline. */
     .live.asleep { background:#e0e7ff; color:#3730a3; }
+    /* The one cell in this table that is a length rather than a tally. */
+    .counts-table td.slept { font-variant-numeric:tabular-nums; white-space:nowrap; }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
     .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
     /* The page tint changes with location, so this banner is separated by its
@@ -223,6 +225,22 @@ function entryHeadline(record){
   if(record.type==="Wellness") return `${I18N.wellnessEmoji(record.amount)} ${I18N.wellnessLabel(record.amount)}`;
   if(record.type==="Location") return `${I18N.locationEmoji(record.amount)} ${I18N.locationLabel(record.amount)}`;
   return I18N.typeLabel(record.type);
+}
+
+// Same shape the Worker validates on write. Sleep logged before the picker
+// existed is free text and cannot be counted, so it reads as null and the
+// day's total simply leaves it out.
+function sleepMinutesOf(amount){
+  const parts=/^(?:(\d{1,3})h)?(?:\s*(\d{1,2})m)?$/.exec(amount||"");
+  if(!parts||(!parts[1]&&!parts[2])) return null;
+  return Number(parts[1]||0)*60+Number(parts[2]||0);
+}
+
+function formatSleepTotal(minutes){
+  if(!minutes) return "—";
+  const hours=Math.floor(minutes/60), rest=minutes%60;
+  if(!hours) return `${rest}m`;
+  return rest?`${hours}h ${rest}m`:`${hours}h`;
 }
 
 function renderSleepNow(){
@@ -636,7 +654,11 @@ function buildDailyCounts(){
       food:dayEntries.filter(e=>e.type==="Food / Drink").length,
       medicine:dayEntries.filter(e=>e.type==="Medicine").length,
       iv:dayEntries.filter(e=>e.type==="IV / Treatment").length,
-      temp:dayEntries.filter(e=>e.type==="Temperature").length
+      temp:dayEntries.filter(e=>e.type==="Temperature").length,
+      // Counted against the day he fell asleep, so a night that runs past
+      // midnight stays as one figure instead of splitting across two rows.
+      sleep:dayEntries.filter(e=>e.type===SLEEP_TYPE)
+                      .reduce((total,e)=>total+(sleepMinutesOf(e.amount)||0),0)
     });
   }
 
@@ -647,7 +669,7 @@ function renderCountsTable(){
   let rows=buildDailyCounts();
 
   if(currentView==="month"){
-    rows=rows.filter(r=>r.food||r.medicine||r.iv||r.temp);
+    rows=rows.filter(r=>r.food||r.medicine||r.iv||r.temp||r.sleep);
   }
 
   if(!rows.length){
@@ -659,7 +681,7 @@ function renderCountsTable(){
     <div style="overflow-x:auto">
       <table class="counts-table">
         <thead>
-          <tr><th>${escapeHtml(I18N.t("thDate"))}</th><th>${escapeHtml(I18N.t("thFood"))}</th><th>${escapeHtml(I18N.t("thMedicine"))}</th><th>${escapeHtml(I18N.t("thIv"))}</th><th>${escapeHtml(I18N.t("thTemp"))}</th></tr>
+          <tr><th>${escapeHtml(I18N.t("thDate"))}</th><th>${escapeHtml(I18N.t("thFood"))}</th><th>${escapeHtml(I18N.t("thMedicine"))}</th><th>${escapeHtml(I18N.t("thIv"))}</th><th>${escapeHtml(I18N.t("thTemp"))}</th><th>${escapeHtml(I18N.t("thSleep"))}</th></tr>
         </thead>
         <tbody>
           ${rows.map(r=>`
@@ -669,6 +691,7 @@ function renderCountsTable(){
               <td>${r.medicine}</td>
               <td>${r.iv}</td>
               <td>${r.temp}</td>
+              <td class="slept">${escapeHtml(formatSleepTotal(r.sleep))}</td>
             </tr>
           `).join("")}
         </tbody>
