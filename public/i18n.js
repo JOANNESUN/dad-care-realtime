@@ -1,4 +1,4 @@
-// Shared English / Chinese strings for both pages.
+// Shared English / Chinese / Indonesian strings for both pages.
 //
 // Record types are stored in the database in English and validated against
 // that exact list in the Worker, so translation is display-only: the values
@@ -204,6 +204,107 @@
       sumWellness: "狀態記錄",
       csvHeaders: ["日期", "時間", "類型", "用量 / 劑量", "詳情", "備註", "建立時間"],
     },
+
+    id: {
+      pageTitle: "Catatan Perawatan Ayah",
+      editorPageTitle: "Catatan Perawatan Ayah — Editor",
+      appTitle: "Catatan Perawatan Ayah",
+
+      connecting: "Menghubungkan…",
+      live: "Langsung",
+      reconnecting: "Menghubungkan ulang…",
+
+      familyAccess: "Akses keluarga",
+      addDeleteRecords: "Tambah atau hapus catatan",
+      signOut: "Keluar",
+
+      today: "Hari ini",
+      week: "Minggu ini",
+      month: "Bulan ini",
+
+      sumFood: "Makan / minum",
+      sumMedicine: "Obat",
+      sumIv: "Infus / perawatan",
+      sumTemp: "Pengukuran suhu",
+
+      temperatureTrend: "Tren suhu",
+      noTemperature: "Tidak ada catatan suhu pada periode ini.",
+      dailyActivity: "Aktivitas harian",
+      noActivity: "Tidak ada aktivitas tercatat pada periode ini.",
+
+      timeline: "Lini masa",
+      timelineDesc: "Perubahan dari anggota keluarga lain muncul otomatis.",
+      filterAll: "Semua",
+      filterFood: "Makan",
+      filterMedicine: "Obat",
+      filterIv: "Infus",
+      filterTemperature: "Suhu",
+      noRecords: "Tidak ada catatan pada periode ini.",
+
+      thDate: "Tanggal",
+      thFood: "Makan",
+      thMedicine: "Obat",
+      thIv: "Infus",
+      thTemp: "Suhu",
+      thSleep: "Tidur",
+
+      exportCsv: "Ekspor CSV",
+      footerNote: "Halaman ini hanya untuk catatan pribadi dan bukan pengganti nasihat medis.",
+      amountDose: "Jumlah / dosis:",
+
+      editorSubtitle: "Akses editor keluarga",
+      editorActive: "Akses editor aktif",
+      addRecord: "Tambah catatan",
+      labelDate: "Tanggal",
+      labelTime: "Waktu",
+      labelType: "Jenis catatan",
+      labelAmount: "Jumlah / dosis / nilai (opsional)",
+      labelDetail: "Apa yang terjadi?",
+      labelNotes: "Catatan tambahan (opsional)",
+      addToTimeline: "Tambahkan ke lini masa",
+      useCurrentTime: "Gunakan waktu sekarang",
+      backToLog: "Catatan perawatan",
+      recentRecords: "Catatan perawatan terbaru",
+      noRecordsYet: "Belum ada catatan.",
+      deleteBtn: "Hapus",
+      atTime: " pukul ",
+
+      errLoad: "Tidak dapat memuat catatan",
+      errSave: "Tidak dapat menyimpan",
+      errDelete: "Tidak dapat menghapus catatan",
+      confirmDelete: "Hapus catatan ini?",
+      nothingToExport: "Tidak ada catatan untuk diekspor.",
+
+      statusHome: "Di rumah",
+      statusHospital: "Di rumah sakit",
+      statusUnknown: "Lokasi belum dicatat",
+      statusSince: "sejak",
+      wellnessTrend: "Bagaimana keadaan beliau",
+      noWellness: "Tidak ada catatan kondisi pada periode ini.",
+      wellnessLabel: "Kondisi keseluruhan",
+      locationLabel: "Beliau sedang di mana?",
+      notesTitle: "Catatan penting",
+      notesMore: "Tampilkan catatan sebelumnya",
+      notesFewer: "Tampilkan lebih sedikit",
+      foldOpen: "Buka",
+      foldClose: "Tutup",
+      noteReadAll: "Baca semua",
+      noteReadLess: "Tampilkan lebih sedikit",
+      labelTemperature: "Suhu",
+      labelSleepHow: "Berapa lama beliau tidur?",
+      sleepLess: "Kurangi 15 menit",
+      sleepMore: "Tambah 15 menit",
+      tempLower: "Turunkan 0,1 °C",
+      tempRaise: "Naikkan 0,1 °C",
+      tempLow: "Di bawah normal",
+      tempNormal: "Normal",
+      tempMild: "Demam ringan",
+      tempFever: "Demam",
+      tempHigh: "Demam tinggi",
+      w5: "Sangat baik", w4: "Baik", w3: "Cukup", w2: "Kurang baik", w1: "Buruk",
+      sumWellness: "Catatan kondisi",
+      csvHeaders: ["Tanggal", "Waktu", "Jenis", "Jumlah / Dosis", "Detail", "Catatan", "Dibuat Pada"],
+    },
   };
 
   // Keys are the values stored in the database — never translate these away.
@@ -232,6 +333,18 @@
       "Note": "醫囑 / 重要記事",
       "Other": "其他",
     },
+    id: {
+      "Food / Drink": "Makan / Minum",
+      "Medicine": "Obat",
+      "IV / Treatment": "Infus / Perawatan",
+      "Temperature": "Suhu",
+      "Sleep / Rest": "Tidur / Istirahat",
+      "Symptoms": "Gejala",
+      "Location": "Lokasi",
+      "Wellness": "Kondisi",
+      "Note": "Catatan dokter / catatan penting",
+      "Other": "Lainnya",
+    },
   };
 
   const PLACEHOLDERS = {
@@ -259,16 +372,33 @@
       "Note": ["例如：王醫生說燒退到 36 度滿兩天就可以出院", ""],
       "Other": ["例如：回診或一般觀察", ""],
     },
+    id: {
+      "Food / Drink": ["mis. Makan 4 pangsit dan minum susu kedelai", "mis. setengah mangkuk, 200 mL"],
+      "Medicine": ["mis. Minum antibiotik dan obat lambung", "mis. 1 tablet"],
+      "IV / Treatment": ["mis. Infus dimulai", "mis. 500 mL"],
+      "Temperature": ["mis. Demam sudah turun", "mis. 37,2°C"],
+      "Sleep / Rest": ["mis. Mulai tidur siang", "mis. tidur 1 jam"],
+      "Symptoms": ["mis. Mual ringan, tidak muntah", "mis. ringan / sedang"],
+      "Location": ["mis. Dirawat untuk observasi", ""],
+      "Wellness": ["mis. Lelah tapi nyaman, makan dengan baik", ""],
+      "Note": ["mis. Dr. Wang: kalau demam di bawah 36 selama dua hari, boleh pulang", ""],
+      "Other": ["mis. Kunjungan dokter atau observasi umum", "opsional"],
+    },
   };
 
   const STORAGE_KEY = "dcl_lang";
+  const SUPPORTED = ["en", "zh", "id"];
+
+  // BCP 47 tags for date formatting and the document's lang attribute.
+  const LOCALES = { en: "en-US", zh: "zh-TW", id: "id-ID" };
 
   function initialLang() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "en" || saved === "zh") return saved;
+      if (SUPPORTED.includes(saved)) return saved;
     } catch {}
-    return String(navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    const nav = String(navigator.language || "").toLowerCase();
+    return SUPPORTED.find(code => nav.startsWith(code)) || "en";
   }
 
   let lang = initialLang();
@@ -322,27 +452,31 @@
     },
 
     locale() {
-      return lang === "zh" ? "zh-TW" : "en-US";
+      return LOCALES[lang] || LOCALES.en;
     },
 
-    // 3:05 pm in English, 下午 3:05 in Chinese.
+    // 3:05 pm in English, 下午 3:05 in Chinese, 15.05 in Indonesian, which
+    // uses a 24-hour clock with a dot between the hours and the minutes.
     displayTime(time) {
       const [h, m] = String(time).split(":").map(Number);
       const mm = String(m).padStart(2, "0");
       if (lang === "zh") return `${h < 12 ? "上午" : "下午"} ${h % 12 || 12}:${mm}`;
+      if (lang === "id") return `${String(h).padStart(2, "0")}.${mm}`;
       return `${h % 12 || 12}:${mm} ${h >= 12 ? "pm" : "am"}`;
     },
 
     // Compact form for chart axis labels.
     displayTimeShort(time) {
       const [h, m] = String(time).split(":").map(Number);
-      if (lang === "zh") return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      const hh = String(h).padStart(2, "0");
+      if (lang === "zh") return `${hh}:${String(m).padStart(2, "0")}`;
+      if (lang === "id") return `${hh}.${String(m).padStart(2, "0")}`;
       return `${h % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""}${h >= 12 ? "pm" : "am"}`;
     },
 
     // Swap every element carrying a data-i18n* attribute.
     applyStatic() {
-      document.documentElement.lang = lang === "zh" ? "zh-TW" : "en";
+      document.documentElement.lang = LOCALES[lang] || LOCALES.en;
 
       document.querySelectorAll("[data-i18n]").forEach(el => {
         el.textContent = I18N.t(el.dataset.i18n);

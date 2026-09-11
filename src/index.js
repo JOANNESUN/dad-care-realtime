@@ -146,8 +146,10 @@ function loginPage(message = "") {
   .card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:28px;
           width:min(360px, calc(100vw - 32px)); box-shadow:0 1px 3px rgba(0,0,0,.06); }
   h1 { margin:0 0 2px; font-size:20px; }
-  .zh-title { font-size:15px; color:#6b7280; margin-bottom:10px; }
-  .zh { color:#6b7280; }
+  /* The login page is shown before any language has been chosen, so every
+     line is repeated in all three. */
+  .alt-title { font-size:15px; color:#6b7280; margin-bottom:10px; }
+  .alt { color:#6b7280; }
   p { margin:0 0 20px; color:#6b7280; font-size:14px; }
   label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
   input { width:100%; box-sizing:border-box; padding:11px 12px; font-size:16px;
@@ -161,12 +163,14 @@ function loginPage(message = "") {
 <body>
   <form class="card" method="POST" action="/login">
     <h1>Dad Care Log</h1>
-    <div class="zh-title">爸爸照護記錄</div>
-    <p>Enter your family password to continue.<br><span class="zh">請輸入家庭密碼以繼續。</span></p>
+    <div class="alt-title">爸爸照護記錄 · Catatan Perawatan Ayah</div>
+    <p>Enter your family password to continue.<br>
+       <span class="alt">請輸入家庭密碼以繼續。</span><br>
+       <span class="alt">Masukkan kata sandi keluarga untuk melanjutkan.</span></p>
     ${message ? `<div class="err">${message}</div>` : ""}
-    <label for="password">Password · 密碼</label>
+    <label for="password">Password · 密碼 · Kata sandi</label>
     <input id="password" name="password" type="password" autocomplete="current-password" autofocus required>
-    <button type="submit">Sign in · 登入</button>
+    <button type="submit">Sign in · 登入 · Masuk</button>
   </form>
 </body>
 </html>`,
@@ -206,7 +210,7 @@ export default {
         else if (await passwordMatches(supplied, env.VIEWER_PASSWORD)) role = "viewer";
 
         if (!role) {
-          return loginPage("That password is not correct. · 密碼不正確。");
+          return loginPage("That password is not correct. · 密碼不正確。 · Kata sandi salah.");
         }
 
         return new Response(null, {
@@ -262,7 +266,7 @@ export default {
 
     if (url.pathname === "/editor" || url.pathname === "/editor.html") {
       if (role !== "editor") {
-        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。 · Kata sandi ini hanya untuk melihat." }, 403);
       }
       // Ask the asset router for the extension-less path it canonicalizes to,
       // otherwise it 307s back to /editor and we loop.
@@ -274,7 +278,7 @@ export default {
       const isWrite = request.method !== "GET" && request.method !== "HEAD";
 
       if (isWrite && role !== "editor") {
-        return json({ error: "This password is view-only. · 此密碼僅可檢視。" }, 403);
+        return json({ error: "This password is view-only. · 此密碼僅可檢視。 · Kata sandi ini hanya untuk melihat." }, 403);
       }
 
       const id = env.CARE_ROOM.idFromName("dad-care-room");
