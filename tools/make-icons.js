@@ -5,8 +5,15 @@ const zlib = require("zlib");
 const fs = require("fs");
 const path = require("path");
 
-const BG = [0x21, 0x70, 0xf5];
-const FG = [255, 255, 255];
+// Colours from the family palette, one per part of the face, so the icon
+// matches the app: Zoom blue behind, Poison eye, Meeting tick, Busy smile.
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const COLOURS = {
+  background: hex("#3f22ec"),
+  eye: hex("#dff700"),
+  check: hex("#03e29d"),
+  mouth: hex("#fa58a7"),
+};
 
 const D = 1280;                 // design-space size
 // Home-screen icons are masked by the OS (iOS squircle, Android maskable), so
@@ -59,14 +66,12 @@ function inStroke(px, py, stroke) {
   return false;
 }
 
-function inMark(px, py) {
-  for (const c of circles) {
-    if (Math.hypot(px - c.x, py - c.y) <= c.r) return true;
-  }
-  for (const s of strokes) {
-    if (inStroke(px, py, s)) return true;
-  }
-  return false;
+// Which part of the face a design-space point falls in, if any.
+function partAt(px, py) {
+  if (circles.some(c => Math.hypot(px - c.x, py - c.y) <= c.r)) return "eye";
+  if (inStroke(px, py, strokes[0])) return "check";
+  if (inStroke(px, py, strokes[1])) return "mouth";
+  return "background";
 }
 
 function render(size) {
@@ -75,20 +80,20 @@ function render(size) {
 
   for (let py = 0; py < size; py++) {
     for (let pxi = 0; pxi < size; pxi++) {
-      let hits = 0;
+      // Average the colour of every subsample, so an edge blends between the
+      // two parts it separates rather than only against the background.
+      const sum = [0, 0, 0];
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
           // Pixel centre -> design space, about the middle, shrunk by MARK.
           const dx = ((pxi + (sx + 0.5) / SS) / size - 0.5) * D / MARK + D / 2;
           const dy = ((py + (sy + 0.5) / SS) / size - 0.5) * D / MARK + D / 2;
-          if (inMark(dx, dy)) hits++;
+          const colour = COLOURS[partAt(dx, dy)];
+          for (let c = 0; c < 3; c++) sum[c] += colour[c];
         }
       }
-      const a = hits / (SS * SS);
       const o = (py * size + pxi) * 3;
-      for (let c = 0; c < 3; c++) {
-        px[o + c] = Math.round(BG[c] * (1 - a) + FG[c] * a);
-      }
+      for (let c = 0; c < 3; c++) px[o + c] = Math.round(sum[c] / (SS * SS));
     }
   }
   return px;
