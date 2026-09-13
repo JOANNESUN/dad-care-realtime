@@ -1,4 +1,4 @@
-// Shared English / Chinese strings for both pages.
+// Shared English / Chinese / Indonesian strings for both pages.
 //
 // Record types are stored in the database in English and validated against
 // that exact list in the Worker, so translation is display-only: the values
@@ -10,6 +10,8 @@
       pageTitle: "Dad Care Log",
       editorPageTitle: "Dad Care Log — Editor",
       appTitle: "Dad Care Log",
+      // [ ] marks the word the wordmark colours pink.
+      appWordmark: "Dad [Care] Log",
 
       connecting: "Connecting…",
       live: "Live",
@@ -104,6 +106,16 @@
       tempHigh: "High fever",
       w5: "Very good", w4: "Good", w3: "Okay", w2: "Not great", w1: "Poor",
       sumWellness: "Wellness check-ins",
+      labelMeal: "Which meal?",
+      labelFoods: "What did he eat?",
+      labelQuantity: "How much?",
+      labelDetailFood: "Anything to add?",
+      optional: "optional",
+      mealBreakfast: "Breakfast", mealLunch: "Lunch", mealDinner: "Dinner", mealSupplement: "Supplement",
+      foodMeat: "Meat", foodVeggie: "Veggie", foodFruit: "Fruit",
+      qtyNone: "Barely any", qtyLittle: "A little", qtyModerate: "Moderate", qtyMore: "More than usual",
+      errMeal: "Choose which meal.",
+      errQuantity: "Choose how much he ate.",
       csvHeaders: ["Date", "Time", "Type", "Amount / Dose", "Details", "Notes", "Created At"],
     },
 
@@ -111,6 +123,7 @@
       pageTitle: "爸爸照護記錄",
       editorPageTitle: "爸爸照護記錄 — 編輯",
       appTitle: "爸爸照護記錄",
+      appWordmark: "爸爸[照護]記錄",
 
       connecting: "連線中…",
       live: "即時",
@@ -202,7 +215,129 @@
       tempHigh: "高燒",
       w5: "很好", w4: "還好", w3: "普通", w2: "不太好", w1: "很不好",
       sumWellness: "狀態記錄",
+      labelMeal: "哪一餐？",
+      labelFoods: "吃了什麼？",
+      labelQuantity: "吃了多少？",
+      labelDetailFood: "其他補充？",
+      optional: "選填",
+      mealBreakfast: "早餐", mealLunch: "午餐", mealDinner: "晚餐", mealSupplement: "營養補充",
+      foodMeat: "肉類", foodVeggie: "蔬菜", foodFruit: "水果",
+      qtyNone: "幾乎沒吃", qtyLittle: "吃一點", qtyModerate: "適量", qtyMore: "比平常多",
+      errMeal: "請選擇哪一餐。",
+      errQuantity: "請選擇吃了多少。",
       csvHeaders: ["日期", "時間", "類型", "用量 / 劑量", "詳情", "備註", "建立時間"],
+    },
+
+    id: {
+      pageTitle: "Catatan Perawatan Ayah",
+      editorPageTitle: "Catatan Perawatan Ayah — Editor",
+      appTitle: "Catatan Perawatan Ayah",
+      appWordmark: "Catatan [Perawatan] Ayah",
+
+      connecting: "Menghubungkan…",
+      live: "Langsung",
+      reconnecting: "Menghubungkan ulang…",
+
+      familyAccess: "Akses keluarga",
+      addDeleteRecords: "Tambah atau hapus catatan",
+      signOut: "Keluar",
+
+      today: "Hari ini",
+      week: "Minggu ini",
+      month: "Bulan ini",
+
+      sumFood: "Makan / minum",
+      sumMedicine: "Obat",
+      sumIv: "Infus / perawatan",
+      sumTemp: "Pengukuran suhu",
+
+      temperatureTrend: "Tren suhu",
+      noTemperature: "Tidak ada catatan suhu pada periode ini.",
+      dailyActivity: "Aktivitas harian",
+      noActivity: "Tidak ada aktivitas tercatat pada periode ini.",
+
+      timeline: "Lini masa",
+      timelineDesc: "Perubahan dari anggota keluarga lain muncul otomatis.",
+      filterAll: "Semua",
+      filterFood: "Makan",
+      filterMedicine: "Obat",
+      filterIv: "Infus",
+      filterTemperature: "Suhu",
+      noRecords: "Tidak ada catatan pada periode ini.",
+
+      thDate: "Tanggal",
+      thFood: "Makan",
+      thMedicine: "Obat",
+      thIv: "Infus",
+      thTemp: "Suhu",
+      thSleep: "Tidur",
+
+      exportCsv: "Ekspor CSV",
+      footerNote: "Halaman ini hanya untuk catatan pribadi dan bukan pengganti nasihat medis.",
+      amountDose: "Jumlah / dosis:",
+
+      editorSubtitle: "Akses editor keluarga",
+      editorActive: "Akses editor aktif",
+      addRecord: "Tambah catatan",
+      labelDate: "Tanggal",
+      labelTime: "Waktu",
+      labelType: "Jenis catatan",
+      labelAmount: "Jumlah / dosis / nilai (opsional)",
+      labelDetail: "Apa yang terjadi?",
+      labelNotes: "Catatan tambahan (opsional)",
+      addToTimeline: "Tambahkan ke lini masa",
+      useCurrentTime: "Gunakan waktu sekarang",
+      backToLog: "Catatan perawatan",
+      recentRecords: "Catatan perawatan terbaru",
+      noRecordsYet: "Belum ada catatan.",
+      deleteBtn: "Hapus",
+      atTime: " pukul ",
+
+      errLoad: "Tidak dapat memuat catatan",
+      errSave: "Tidak dapat menyimpan",
+      errDelete: "Tidak dapat menghapus catatan",
+      confirmDelete: "Hapus catatan ini?",
+      nothingToExport: "Tidak ada catatan untuk diekspor.",
+
+      statusHome: "Di rumah",
+      statusHospital: "Di rumah sakit",
+      statusUnknown: "Lokasi belum dicatat",
+      statusSince: "sejak",
+      wellnessTrend: "Bagaimana keadaan beliau",
+      noWellness: "Tidak ada catatan kondisi pada periode ini.",
+      wellnessLabel: "Kondisi keseluruhan",
+      locationLabel: "Beliau sedang di mana?",
+      notesTitle: "Catatan penting",
+      notesMore: "Tampilkan catatan sebelumnya",
+      notesFewer: "Tampilkan lebih sedikit",
+      foldOpen: "Buka",
+      foldClose: "Tutup",
+      noteReadAll: "Baca semua",
+      noteReadLess: "Tampilkan lebih sedikit",
+      labelTemperature: "Suhu",
+      labelSleepHow: "Berapa lama beliau tidur?",
+      sleepLess: "Kurangi 15 menit",
+      sleepMore: "Tambah 15 menit",
+      tempLower: "Turunkan 0,1 °C",
+      tempRaise: "Naikkan 0,1 °C",
+      tempLow: "Di bawah normal",
+      tempNormal: "Normal",
+      tempMild: "Demam ringan",
+      tempFever: "Demam",
+      tempHigh: "Demam tinggi",
+      w5: "Sangat baik", w4: "Baik", w3: "Cukup", w2: "Kurang baik", w1: "Buruk",
+      sumWellness: "Catatan kondisi",
+      labelMeal: "Waktu makan?",
+      labelFoods: "Apa yang beliau makan?",
+      labelQuantity: "Seberapa banyak?",
+      labelDetailFood: "Ada tambahan?",
+      optional: "opsional",
+      mealBreakfast: "Sarapan", mealLunch: "Makan siang", mealDinner: "Makan malam", mealSupplement: "Suplemen",
+      foodMeat: "Daging", foodVeggie: "Sayur", foodFruit: "Buah",
+      qtyNone: "Hampir tidak", qtyLittle: "Sedikit", qtyModerate: "Sedang", qtyMore: "Lebih dari biasa",
+      errMeal: "Pilih waktu makan.",
+      errQuantity: "Pilih seberapa banyak beliau makan.",
+      csvHeaders: ["Tanggal", "Waktu", "Jenis", "Jumlah / Dosis", "Detail", "Catatan", "Dibuat Pada"],
     },
   };
 
@@ -232,6 +367,18 @@
       "Note": "醫囑 / 重要記事",
       "Other": "其他",
     },
+    id: {
+      "Food / Drink": "Makan / Minum",
+      "Medicine": "Obat",
+      "IV / Treatment": "Infus / Perawatan",
+      "Temperature": "Suhu",
+      "Sleep / Rest": "Tidur / Istirahat",
+      "Symptoms": "Gejala",
+      "Location": "Lokasi",
+      "Wellness": "Kondisi",
+      "Note": "Catatan dokter / catatan penting",
+      "Other": "Lainnya",
+    },
   };
 
   const PLACEHOLDERS = {
@@ -259,16 +406,33 @@
       "Note": ["例如：王醫生說燒退到 36 度滿兩天就可以出院", ""],
       "Other": ["例如：回診或一般觀察", ""],
     },
+    id: {
+      "Food / Drink": ["mis. Makan 4 pangsit dan minum susu kedelai", "mis. setengah mangkuk, 200 mL"],
+      "Medicine": ["mis. Minum antibiotik dan obat lambung", "mis. 1 tablet"],
+      "IV / Treatment": ["mis. Infus dimulai", "mis. 500 mL"],
+      "Temperature": ["mis. Demam sudah turun", "mis. 37,2°C"],
+      "Sleep / Rest": ["mis. Mulai tidur siang", "mis. tidur 1 jam"],
+      "Symptoms": ["mis. Mual ringan, tidak muntah", "mis. ringan / sedang"],
+      "Location": ["mis. Dirawat untuk observasi", ""],
+      "Wellness": ["mis. Lelah tapi nyaman, makan dengan baik", ""],
+      "Note": ["mis. Dr. Wang: kalau demam di bawah 36 selama dua hari, boleh pulang", ""],
+      "Other": ["mis. Kunjungan dokter atau observasi umum", "opsional"],
+    },
   };
 
   const STORAGE_KEY = "dcl_lang";
+  const SUPPORTED = ["en", "zh", "id"];
+
+  // BCP 47 tags for date formatting and the document's lang attribute.
+  const LOCALES = { en: "en-US", zh: "zh-TW", id: "id-ID" };
 
   function initialLang() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "en" || saved === "zh") return saved;
+      if (SUPPORTED.includes(saved)) return saved;
     } catch {}
-    return String(navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    const nav = String(navigator.language || "").toLowerCase();
+    return SUPPORTED.find(code => nav.startsWith(code)) || "en";
   }
 
   let lang = initialLang();
@@ -313,6 +477,31 @@
       }[storedType] || "\u{1F4DD}";
     },
 
+    // "Lunch|Meat,Veggie|Moderate" -> its three parts, or null for a meal
+    // written as free text before the picker existed.
+    food(amount) {
+      const m = /^(Breakfast|Lunch|Dinner|Supplement)\|((?:Meat|Veggie|Fruit)(?:,(?:Meat|Veggie|Fruit))*)?\|(None|Little|Moderate|More)$/
+        .exec(String(amount || ""));
+      return m ? { meal: m[1], items: m[2] ? m[2].split(",") : [], quantity: m[3] } : null;
+    },
+
+    mealEmoji(meal) {
+      return { Breakfast: "\u{1F305}", Lunch: "\u2600\uFE0F", Dinner: "\u{1F319}", Supplement: "\u{1F964}" }[meal] || "";
+    },
+
+    foodEmoji(item) {
+      return { Meat: "\u{1F356}", Veggie: "\u{1F96C}", Fruit: "\u{1F34E}" }[item] || "";
+    },
+
+    // Plain text, for places that cannot take markup: the CSV and titles.
+    foodText(amount) {
+      const f = I18N.food(amount);
+      if (!f) return null;
+      const items = f.items.map(i => I18N.t("food" + i)).join(lang === "zh" ? "、" : ", ");
+      const head = I18N.t("meal" + f.meal) + (items ? ` — ${items}` : "");
+      return `${head} · ${I18N.t("qty" + f.quantity)}`;
+    },
+
     locationEmoji(place) {
       return place === "Hospital" ? "\u{1F3E5}" : "\u{1F3E0}";
     },
@@ -322,30 +511,45 @@
     },
 
     locale() {
-      return lang === "zh" ? "zh-TW" : "en-US";
+      return LOCALES[lang] || LOCALES.en;
     },
 
-    // 3:05 pm in English, 下午 3:05 in Chinese.
+    // 3:05 pm in English, 下午 3:05 in Chinese, 15.05 in Indonesian, which
+    // uses a 24-hour clock with a dot between the hours and the minutes.
     displayTime(time) {
       const [h, m] = String(time).split(":").map(Number);
       const mm = String(m).padStart(2, "0");
       if (lang === "zh") return `${h < 12 ? "上午" : "下午"} ${h % 12 || 12}:${mm}`;
+      if (lang === "id") return `${String(h).padStart(2, "0")}.${mm}`;
       return `${h % 12 || 12}:${mm} ${h >= 12 ? "pm" : "am"}`;
     },
 
     // Compact form for chart axis labels.
     displayTimeShort(time) {
       const [h, m] = String(time).split(":").map(Number);
-      if (lang === "zh") return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      const hh = String(h).padStart(2, "0");
+      if (lang === "zh") return `${hh}:${String(m).padStart(2, "0")}`;
+      if (lang === "id") return `${hh}.${String(m).padStart(2, "0")}`;
       return `${h % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""}${h >= 12 ? "pm" : "am"}`;
     },
 
     // Swap every element carrying a data-i18n* attribute.
     applyStatic() {
-      document.documentElement.lang = lang === "zh" ? "zh-TW" : "en";
+      document.documentElement.lang = LOCALES[lang] || LOCALES.en;
 
       document.querySelectorAll("[data-i18n]").forEach(el => {
         el.textContent = I18N.t(el.dataset.i18n);
+      });
+
+      // Built from text nodes, never innerHTML, so a translation cannot inject markup.
+      document.querySelectorAll("[data-i18n-wordmark]").forEach(el => {
+        el.replaceChildren(...I18N.t(el.dataset.i18nWordmark).split(/(\[[^\]]+\])/).filter(Boolean).map(part => {
+          if (!part.startsWith("[")) return document.createTextNode(part);
+          const span = document.createElement("span");
+          span.className = "wordmark-accent";
+          span.textContent = part.slice(1, -1);
+          return span;
+        }));
       });
 
       document.querySelectorAll("[data-i18n-title]").forEach(el => {

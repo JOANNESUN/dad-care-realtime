@@ -73,10 +73,23 @@ For six users and one care log, that is a very small workload.
 
 - `public/index.html` — the page
 - `src/index.js` — API, SQLite database, and WebSocket server
+- `public/i18n.js` — every on-screen string, in each language
 - `public/manifest.webmanifest` — lets phones add the app to the home screen
 - `tools/make-icons.js` — regenerates the home-screen icons
 - `wrangler.jsonc` — Cloudflare configuration
 - `package.json` — local/deploy commands
+
+## Languages
+
+English, Traditional Chinese and Indonesian, chosen with the tabs in the
+header and remembered per device. Record types are stored in the database in
+English and validated against that list in the Worker, so translation is
+display-only and switching language never changes stored data.
+
+To add another, add a block to `STRINGS`, `TYPE_LABELS` and `PLACEHOLDERS` in
+`public/i18n.js`, add the code to `SUPPORTED` and `LOCALES`, and add a tab
+button to both HTML pages. A missing key falls back to English rather than
+breaking the page.
 
 ## Home screen icon
 
