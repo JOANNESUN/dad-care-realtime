@@ -19,6 +19,27 @@ const LOCATION_VALUES = new Set(["Home", "Hospital"]);
 
 const SLEEP_TYPE = "Sleep / Rest";
 
+const FOOD_TYPE = "Food / Drink";
+
+// A meal is stored as one value, "Lunch|Meat,Veggie|Moderate": which meal,
+// what was in it, and how much of it he ate. Keeping all three in amount means
+// the table needs no new columns and every meal can still be counted later.
+const FOOD_MEALS = new Set(["Breakfast", "Lunch", "Dinner", "Supplement"]);
+const FOOD_ITEMS = new Set(["Meat", "Veggie", "Fruit"]);
+const FOOD_QUANTITIES = new Set(["None", "Little", "Moderate", "More"]);
+
+function validFood(amount) {
+  const parts = amount.split("|");
+  if (parts.length !== 3) return false;
+  const [meal, items, quantity] = parts;
+  if (!FOOD_MEALS.has(meal) || !FOOD_QUANTITIES.has(quantity)) return false;
+  if (!items) return true;
+  // A supplement is not a plate of food, so it carries no food groups.
+  if (meal === "Supplement") return false;
+  const list = items.split(",");
+  return list.every(item => FOOD_ITEMS.has(item)) && new Set(list).size === list.length;
+}
+
 // A sleep is stored as its length, so every one of them can be counted.
 const SLEEP_DURATION = /^(?:(\d{1,3})h)?(?:\s*(\d{1,2})m)?$/;
 
@@ -131,38 +152,45 @@ function loginPage(message = "") {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<meta name="theme-color" content="#f6f7f8">
+<meta name="theme-color" content="#fbe3f1">
 <!-- Opened from the home screen these drop the browser chrome, so it reads
      as an app rather than a page. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dad Care">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
 <title>Dad Care Log · 爸爸照護記錄</title>
 <style>
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
          font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-         background:#f6f7f8; color:#1f2937; }
-  .card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:28px;
-          width:min(360px, calc(100vw - 32px)); box-shadow:0 1px 3px rgba(0,0,0,.06); }
-  h1 { margin:0 0 2px; font-size:20px; }
+         background:#fbe3f1; color:#1b1340; }
+  .card { background:#fff; border-radius:20px; padding:28px;
+          width:min(380px, calc(100vw - 32px));
+          box-shadow:0 1px 2px rgba(27,19,64,.08), 0 8px 24px rgba(27,19,64,.08); }
+  h1 { margin:0 0 4px; font-family:Bungee,system-ui,sans-serif; font-weight:400; font-size:26px; color:#3f22ec; }
   /* The login page is shown before any language has been chosen, so every
      line is repeated in all three. */
-  .alt-title { font-size:15px; color:#6b7280; margin-bottom:10px; }
-  .alt { color:#6b7280; }
-  p { margin:0 0 20px; color:#6b7280; font-size:14px; }
-  label { display:block; font-size:13px; margin-bottom:6px; color:#374151; }
+  .alt-title { font-size:15px; color:#4a3f6b; margin-bottom:10px; }
+  .alt { color:#4a3f6b; }
+  p { margin:0 0 20px; color:#4a3f6b; font-size:14px; }
+  label { display:block; font-size:14px; font-weight:700; margin-bottom:6px; color:#1b1340; }
   input { width:100%; box-sizing:border-box; padding:11px 12px; font-size:16px;
-          border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; }
-  button { width:100%; margin-top:14px; padding:11px 12px; font-size:15px; cursor:pointer;
-           border:0; border-radius:10px; background:#374151; color:#fff; }
+          border:2px solid #1b1340; border-radius:12px; background:#fff; color:#1b1340; }
+  input:focus { outline:3px solid #3f22ec; outline-offset:1px; }
+  button { width:100%; margin-top:14px; min-height:52px; padding:0 12px; font-size:16px; font-weight:700; cursor:pointer;
+           border:0; border-radius:14px; background:#3f22ec; color:#fff; box-shadow:0 3px 10px rgba(63,34,236,.28); }
+  button:hover { background:#2f14d0; }
+  button:focus-visible { outline:3px solid #1b1340; outline-offset:2px; }
   .err { margin:0 0 14px; padding:10px 12px; border-radius:10px;
-         background:#fef2f2; color:#991b1b; font-size:13px; }
+         background:#fde0ee; color:#8e0f4f; border:2px solid #fa58a7; font-weight:600; font-size:13px; }
 </style>
 </head>
 <body>
   <form class="card" method="POST" action="/login">
-    <h1>Dad Care Log</h1>
+    <h1>Dad <span style="color:#e3368b">Care</span> Log</h1>
     <div class="alt-title">爸爸照護記錄 · Catatan Perawatan Ayah</div>
     <p>Enter your family password to continue.<br>
        <span class="alt">請輸入家庭密碼以繼續。</span><br>
@@ -393,6 +421,12 @@ export class CareRoom extends DurableObject {
     // existed keep whatever text they have - this only guards new writes.
     if (type === SLEEP_TYPE && amount && sleepMinutes(amount) === null) {
       return json({ error: "Sleep must be a length like 1h 30m" }, 400);
+    }
+
+    // Same rule as sleep: earlier meals were free text in detail and stay as
+    // they are, but anything new in amount has to be a meal the log can read.
+    if (type === FOOD_TYPE && amount && !validFood(amount)) {
+      return json({ error: "Food must say which meal and how much" }, 400);
     }
 
     if (!amount && !detail) {

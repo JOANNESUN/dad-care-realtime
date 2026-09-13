@@ -5,43 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <meta name="theme-color" content="#f6f7f8">
+  <meta name="theme-color" content="#fbe3f1">
   <!-- Opened from the home screen these drop the browser chrome, so it reads
        as an app rather than a page. -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Dad Care">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
   <title data-i18n="editorPageTitle">Dad Care Log — Editor</title>
   <style>
     :root {
-      --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#374151; --soft:#f3f4f6;
-      --danger:#991b1b; --danger-bg:#fee2e2;
-      --good:#166534; --good-bg:#dcfce7;
+      /* Same palette and the same one-job-per-colour rule as the log page:
+         zoom = action, poison = chosen, meeting = all good, busy = attention. */
+      --fluff:#f4b5de; --poison:#dff700; --busy:#fa58a7; --zoom:#3f22ec; --meeting:#03e29d; --giraffe:#efca62;
+      --ink:#1b1340; --ink-2:#4a3f6b;
+      --fluff-soft:#fbe3f1; --busy-soft:#fde0ee; --zoom-soft:#e7e2fd;
+
+      --bg:var(--fluff-soft); --card:#fff; --text:var(--ink); --muted:var(--ink-2); --muted-strong:var(--ink-2);
+      --line:#ece3ec; --edge:var(--ink); --soft:#f7f1f6; --accent:var(--zoom);
+      --danger:#8e0f4f; --danger-bg:var(--busy-soft);
+      --good:var(--ink); --good-bg:var(--meeting);
+      --control-h:44px;
+      --tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5' fill='none' stroke='%231b1340' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
     * { box-sizing:border-box; }
+    /* Selection and caret ship as browser defaults that belong to no palette;
+       tinting them from the accent is the cheapest way the page stops looking
+       assembled. The alpha keeps it legible over the location tints. */
+    ::selection { background:var(--poison); color:var(--ink); }
+    input,textarea,select { caret-color:var(--accent); }
     body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
     .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    h1 { margin:0 0 4px; font-size:28px; }
+    h1 { margin:0 0 4px; font-family:Bungee,system-ui,sans-serif; font-weight:400; font-size:30px; line-height:1.1; color:var(--zoom); }
+    /* Busy one step darker: the swatch itself is 2.5:1 on the hospital tint,
+       under the 3:1 large-text floor. */
+    .wordmark-accent { color:#e3368b; }
     h2 { font-size:18px; margin:0 0 12px; }
     .subtitle,.meta,.footer-note { color:var(--muted); }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .card { background:var(--card); border-radius:20px; padding:18px; margin-bottom:18px;
+            box-shadow:0 1px 2px rgba(27,19,64,.08), 0 8px 24px rgba(27,19,64,.06); }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .full { grid-column:1/-1; }
-    label { display:block; font-size:14px; color:var(--muted); margin-bottom:6px; }
-    input,select,textarea { width:100%; padding:11px 12px; border:1px solid var(--line);
+    label { display:block; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:11px 12px; border:2px solid var(--edge); color:var(--ink);
                             border-radius:10px; font:inherit; font-size:17px; }
     textarea { min-height:92px; resize:vertical; line-height:1.5; }
     button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
-    .primary { background:var(--accent); color:#fff; }
-    .secondary { background:var(--soft); color:var(--text); }
-    .danger { background:var(--danger-bg); color:var(--danger); }
+    input:focus,select:focus,textarea:focus { outline:3px solid var(--zoom); outline-offset:1px; }
+    .primary { background:var(--zoom); color:#fff; border:2px solid var(--zoom); font-weight:700;
+               min-height:50px; box-shadow:0 3px 10px rgba(63,34,236,.28); }
+    .primary:hover { background:#2f14d0; }
+    .secondary { background:var(--card); color:var(--ink); border:2px solid var(--edge); font-weight:600; min-height:50px; }
+    .secondary:hover { background:var(--soft); }
+    .danger { background:var(--danger-bg); color:var(--danger); border:2px solid var(--busy); font-weight:700; }
+    button:focus-visible,a:focus-visible { outline:3px solid var(--zoom); outline-offset:2px; }
     .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
     .entry-list { display:flex; flex-direction:column; gap:12px; }
-    .entry { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+    .entry { border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
     .entry-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
     .entry-line { display:flex; align-items:center; gap:9px; }
     .entry-icon { font-size:21px; line-height:1.2; }
@@ -53,15 +78,17 @@
     .detail { margin-top:8px; line-height:1.5; white-space:pre-wrap; }
     .meta { font-size:13px; margin-top:7px; }
     .empty { text-align:center; color:var(--muted); padding:18px 0; }
-    .error { color:#991b1b; margin-top:10px; font-size:13px; }
-    .status { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border-radius:999px; font-size:13px; background:var(--good-bg); color:var(--good); }
+    .error { color:#a3155f; font-weight:600; margin-top:10px; font-size:14px; }
+    .status { box-sizing:border-box; display:inline-flex; align-items:center; gap:7px; height:var(--control-h); padding:0 14px; border-radius:999px; font-size:13px;
+              font-weight:700; background:var(--good-bg); color:var(--good); border:2px solid var(--edge); }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
-    .topline-right { display:flex; align-items:center; gap:10px; }
+    .topline-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; }
     .choice-row { display:flex; gap:8px; flex-wrap:wrap; }
-    .choice { display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 12px; min-width:66px;
-              border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--text); cursor:pointer; font-size:12px; }
+    .choice { position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 12px; min-width:66px;
+              border:2px solid var(--edge); border-radius:14px; background:var(--card); color:var(--ink); cursor:pointer;
+              font-size:13px; font-weight:600; }
     .choice .big { font-size:22px; line-height:1.2; }
-    .choice.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .choice.active { background:var(--poison); color:var(--ink); }
 
     /* Temperature is the one type with a real numeric scale, so it gets a bar
        instead of a text box. The bands mark where a normal reading turns into
@@ -75,7 +102,7 @@
        The scale below carries the same inset, so the two stay aligned. */
     .temp-bar { position:relative; height:46px; margin:10px 18px 0; border-radius:8px;
                 touch-action:none; cursor:pointer; }
-    .temp-bar:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+    .temp-bar:focus-visible { outline:3px solid var(--zoom); outline-offset:4px; }
     .temp-track { position:absolute; left:0; right:0; top:18px; height:10px;
                   border-radius:6px; overflow:hidden; display:flex; }
     .temp-thumb { position:absolute; top:5px; width:36px; height:36px; margin-left:-18px;
@@ -85,7 +112,7 @@
                   font-variant-numeric:tabular-nums; }
     .temp-scale span { position:absolute; top:0; }
     .temp-steps { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:12px; }
-    .temp-step { width:44px; height:44px; border:1px solid var(--line); border-radius:12px;
+    .temp-step { width:46px; height:46px; border:2px solid var(--edge); border-radius:12px;
                  background:#fff; color:var(--text); font-size:20px; line-height:1; }
     .temp-step:active { background:var(--soft); }
     .temp-step-hint { font-size:12px; color:var(--muted); min-width:48px; text-align:center; }
@@ -96,11 +123,46 @@
                      font-variant-numeric:tabular-nums; }
     .sleep-readout b { font-size:42px; font-weight:600; line-height:1; letter-spacing:-.02em; }
     .sleep-readout span { font-size:17px; color:var(--muted); margin-right:7px; }
-    .sleep-fill { position:absolute; left:0; top:0; bottom:0; background:#c7d2fe; }
+    .sleep-fill { position:absolute; left:0; top:0; bottom:0; background:var(--zoom); opacity:.35; }
 
-    .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
-    .lang-tab { padding:6px 14px; font-size:13px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
-    .lang-tab.active { background:var(--accent); color:#fff; }
+    /* Matches the log page. */
+    .lang-tabs { display:flex; gap:0; height:var(--control-h); border:2px solid var(--edge); border-radius:999px;
+                 overflow:hidden; background:var(--card); }
+    .lang-tab { height:100%; padding:0 12px; min-width:44px; font-size:13px; font-weight:700; line-height:1.25;
+                cursor:pointer; border:0; border-radius:0; background:transparent; color:var(--ink);
+                transition:background .15s ease, color .15s ease; }
+    .lang-tab:hover:not(.active) { background:var(--soft); }
+    .lang-tab.active { background:var(--ink); color:var(--poison); }
+    @media (prefers-reduced-motion:reduce){ .lang-tab{transition:none} }
+    /* Food. Meal and quantity are pick-one sets, so they are bars shaped like
+       the location switch; what he ate is pick-any, so it is chips. The shape
+       tells you which kind of choice it is before you read a label. */
+    .food-field { display:flex; flex-direction:column; gap:16px; }
+    .optional { color:var(--muted); font-weight:400; }
+    .seg { display:flex; width:100%; border:2px solid var(--edge); border-radius:14px;
+           overflow:hidden; background:var(--card); }
+    .seg button { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+                  gap:3px; min-height:56px; padding:8px 4px; border:0; border-radius:0;
+                  border-left:2px solid var(--edge); background:transparent;
+                  color:var(--ink); font-size:13px; font-weight:600; line-height:1.2; }
+    .seg button:first-child { border-left:0; }
+    .seg .big { font-size:19px; line-height:1.1; }
+    /* Chosen = yellow plus a drawn tick in the corner, never colour alone. */
+    .seg button.active, .chip.active { background:var(--poison); color:var(--ink); font-weight:700; }
+    .seg button.active::after, .choice.active::after {
+      content:""; position:absolute; top:5px; right:6px; width:13px; height:13px;
+      background:var(--tick) center/contain no-repeat; }
+    .chip.active::before { content:""; width:14px; height:14px; background:var(--tick) center/contain no-repeat; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { display:inline-flex; align-items:center; gap:6px; min-height:48px; padding:0 16px;
+            border:2px solid var(--edge); border-radius:999px; background:var(--card);
+            color:var(--ink); font-size:15px; font-weight:600; }
+    .chip .big { font-size:17px; }
+    .field-missing .seg { border-color:var(--busy); box-shadow:0 0 0 3px var(--busy-soft); }
+    .field-missing label { color:#a3155f; }
+    /* Refusing a meal is the thing a family most needs to notice. */
+    .entry-warn { display:inline-block; padding:0 9px; border-radius:999px; background:var(--busy); color:var(--ink); }
+    @media(max-width:640px){ .lang-tab{padding:0 15px} }
     @media(max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
@@ -108,14 +170,14 @@
 <div class="container">
   <div class="topline">
     <div>
-      <h1 data-i18n="appTitle"></h1>
+      <h1 data-i18n-wordmark="appWordmark"></h1>
       <div class="subtitle" data-i18n="editorSubtitle"></div>
     </div>
     <div class="topline-right">
       <div class="lang-tabs" role="group" aria-label="Language">
-        <button type="button" class="secondary lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
-        <button type="button" class="secondary lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
-        <button type="button" class="secondary lang-tab" data-lang="id" onclick="I18N.setLang('id')">ID</button>
+        <button type="button" class="lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
+        <button type="button" class="lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
+        <button type="button" class="lang-tab" data-lang="id" onclick="I18N.setLang('id')">ID</button>
       </div>
       <div class="status"><span class="dot"></span><span data-i18n="editorActive"></span></div>
     </div>
@@ -173,12 +235,26 @@
           <button type="button" class="temp-step" id="sleepUp" data-i18n-aria="sleepMore">+</button>
         </div>
       </div>
-      <div class="full"><label data-i18n="labelDetail"></label><textarea id="detail"></textarea></div>
+      <div id="foodField" class="full food-field" style="display:none">
+        <div id="mealGroup">
+          <label id="mealLabel" data-i18n="labelMeal"></label>
+          <div class="seg" id="mealButtons" role="group" aria-labelledby="mealLabel"></div>
+        </div>
+        <div id="itemGroup">
+          <label id="itemLabel"><span data-i18n="labelFoods"></span> <span class="optional">— <span data-i18n="optional"></span></span></label>
+          <div class="chips" id="itemButtons" role="group" aria-labelledby="itemLabel"></div>
+        </div>
+        <div id="quantityGroup">
+          <label id="quantityLabel" data-i18n="labelQuantity"></label>
+          <div class="seg" id="quantityButtons" role="group" aria-labelledby="quantityLabel"></div>
+        </div>
+      </div>
+      <div class="full"><label id="detailLabel"></label><textarea id="detail"></textarea></div>
     </div>
     <div class="actions">
       <button id="saveBtn" class="primary" onclick="addEntry()" data-i18n="addToTimeline"></button>
       <button class="secondary" onclick="fillCurrentTime()" data-i18n="useCurrentTime"></button>
-      <a href="/" class="secondary" style="display:inline-block; text-decoration:none; padding:10px 14px; border-radius:10px; background:var(--soft); color:var(--text);" data-i18n="backToLog"></a>
+      <a href="/" class="secondary" style="display:inline-flex; align-items:center; text-decoration:none; padding:0 14px; border-radius:10px;" data-i18n="backToLog"></a>
     </div>
     <div id="formError" class="error"></div>
   </div>
@@ -392,6 +468,63 @@ function initSleepPicker() {
   renderSleep();
 }
 
+const FOOD_TYPE = "Food / Drink";
+const MEALS = ["Breakfast", "Lunch", "Dinner", "Supplement"];
+const FOOD_ITEMS = ["Meat", "Veggie", "Fruit"];
+const QUANTITIES = ["None", "Little", "Moderate", "More"];
+
+// Nothing is preselected: a meal logged with a guessed default is worse than
+// one that asks, and "how much" in particular has to be a deliberate answer.
+const food = { meal: "", items: new Set(), quantity: "" };
+
+function resetFood() {
+  food.meal = "";
+  food.items.clear();
+  food.quantity = "";
+  renderFood();
+}
+
+function renderFood() {
+  const pressed = on => `class="${on ? "active" : ""}" aria-pressed="${on}"`;
+
+  $("mealButtons").innerHTML = MEALS.map(m => `
+    <button type="button" ${pressed(food.meal === m)} onclick="pickMeal('${m}')">
+      <span class="big">${I18N.mealEmoji(m)}</span><span>${escapeHtml(I18N.t("meal" + m))}</span>
+    </button>`).join("");
+
+  $("itemButtons").innerHTML = FOOD_ITEMS.map(i => `
+    <button type="button" class="chip${food.items.has(i) ? " active" : ""}" aria-pressed="${food.items.has(i)}"
+            onclick="toggleItem('${i}')">
+      <span class="big">${I18N.foodEmoji(i)}</span><span>${escapeHtml(I18N.t("food" + i))}</span>
+    </button>`).join("");
+
+  $("quantityButtons").innerHTML = QUANTITIES.map(q => `
+    <button type="button" ${pressed(food.quantity === q)} onclick="pickQuantity('${q}')">
+      ${escapeHtml(I18N.t("qty" + q))}
+    </button>`).join("");
+
+  // A supplement is a drink or a tablet, not a plate, so there is nothing to tick.
+  $("itemGroup").style.display = food.meal === "Supplement" ? "none" : "";
+}
+
+function pickMeal(meal) {
+  food.meal = meal;
+  if (meal === "Supplement") food.items.clear();
+  $("mealGroup").classList.remove("field-missing");
+  renderFood();
+}
+
+function toggleItem(item) {
+  food.items.has(item) ? food.items.delete(item) : food.items.add(item);
+  renderFood();
+}
+
+function pickQuantity(quantity) {
+  food.quantity = quantity;
+  $("quantityGroup").classList.remove("field-missing");
+  renderFood();
+}
+
 function updatePlaceholder() {
   const type = $("type").value;
   $("detail").placeholder = I18N.placeholders(type)[0];
@@ -402,8 +535,13 @@ function updatePlaceholder() {
   $("choiceField").style.display = choices ? "" : "none";
   $("tempField").style.display = isTemp ? "" : "none";
   $("sleepField").style.display = isSleep ? "" : "none";
+  const isFood = type === FOOD_TYPE;
+  $("foodField").style.display = isFood ? "" : "none";
+  // With the meal already described above, the box is only for extras.
+  $("detailLabel").textContent = I18N.t(isFood ? "labelDetailFood" : "labelDetail");
   if (isTemp) renderTemp();
   if (isSleep) renderSleep();
+  if (isFood) renderFood();
 
   if (!choices) {
     choiceValue = "";
@@ -431,6 +569,7 @@ function entryBody(record) {
 
   if (record.type === "Wellness") parts.push(strong(I18N.wellnessLabel(record.amount)));
   else if (record.type === "Location") parts.push(strong(I18N.locationLabel(record.amount)));
+  else if (I18N.food(record.amount)) parts.push(foodHtml(I18N.food(record.amount)));
   else if (record.amount) parts.push(strong(record.amount));
 
   const words = [record.detail, record.notes].filter(Boolean).join("\n");
@@ -438,6 +577,13 @@ function entryBody(record) {
 
   return parts.join(" · ")
       || `<span class="entry-bare">${escapeHtml(I18N.typeLabel(record.type))}</span>`;
+}
+
+function foodHtml(f) {
+  const items = f.items.map(i => I18N.t("food" + i)).join(I18N.lang === "zh" ? "、" : ", ");
+  const qty = `<span class="entry-value${f.quantity === "None" ? " entry-warn" : ""}">${escapeHtml(I18N.t("qty" + f.quantity))}</span>`;
+  return `<span class="entry-value">${escapeHtml(I18N.t("meal" + f.meal))}</span>`
+       + (items ? ` — ${escapeHtml(items)}` : "") + ` · ${qty}`;
 }
 
 function escapeHtml(value) {
@@ -449,7 +595,19 @@ async function addEntry() {
   const type = $("type").value;
 
   // Stored as the same "37.2°C" string the log's chart already parses.
-  const amount = type === "Temperature" ? `${tempText()}°C`
+  if (type === FOOD_TYPE) {
+    const missing = !food.meal ? ["mealGroup", "errMeal"] : !food.quantity ? ["quantityGroup", "errQuantity"] : null;
+    if (missing) {
+      $(missing[0]).classList.add("field-missing");
+      $("formError").textContent = I18N.t(missing[1]);
+      $(missing[0]).scrollIntoView({ block: "center", behavior: "smooth" });
+      return;
+    }
+  }
+
+  const amount = type === FOOD_TYPE
+               ? `${food.meal}|${FOOD_ITEMS.filter(i => food.items.has(i)).join(",")}|${food.quantity}`
+               : type === "Temperature" ? `${tempText()}°C`
                : type === SLEEP_TYPE ? sleepText(sleepMinutes)
                : choicesFor(type) ? choiceValue
                : "";
@@ -475,6 +633,7 @@ async function addEntry() {
     if (!res.ok) throw new Error(data.error || I18N.t("errSave"));
 
     $("detail").value = "";
+    if (type === FOOD_TYPE) resetFood();
     fillCurrentTime();
     await loadRecords();
   } catch (err) {

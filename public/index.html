@@ -5,82 +5,158 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <meta name="theme-color" content="#f6f7f8">
+  <meta name="theme-color" content="#fbe3f1">
   <!-- Opened from the home screen these drop the browser chrome, so it reads
        as an app rather than a page. -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Dad Care">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
   <title data-i18n="pageTitle">Dad Care Log</title>
   <style>
     :root {
-      --bg:#f6f7f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
-      --line:#e5e7eb; --accent:#374151; --soft:#f3f4f6;
-      --good:#166534; --good-bg:#dcfce7; --warn:#92400e; --warn-bg:#fef3c7;
+      /* The family palette. Each colour has one job, so a colour always means
+         the same thing wherever it appears:
+           zoom    - an action you can take
+           poison  - what is currently chosen
+           meeting - live / all good
+           busy    - needs attention
+           giraffe, fluff - at home, in hospital
+         Text is ink rather than white or black: it passes 4.5:1 on every one
+         of the six, where white fails on busy, meeting and poison. */
+      --fluff:#f4b5de; --poison:#dff700; --busy:#fa58a7; --zoom:#3f22ec; --meeting:#03e29d; --giraffe:#efca62;
+      --ink:#1b1340; --ink-2:#4a3f6b;
+      /* Page tints for where he is. Home is kept paler than giraffe-soft,
+         because at home the page, the chosen location and the chosen tab
+         would otherwise all be yellow. */
+      --home-tint:#fdf8ea; --hospital-tint:#fbe3f1;
+      --fluff-soft:#fbe3f1; --giraffe-soft:#fbf0cf; --meeting-soft:#d3f7ea; --busy-soft:#fde0ee; --zoom-soft:#e7e2fd;
+
+      --bg:#fdf6fa; --card:#fff; --text:var(--ink); --muted:var(--ink-2); --muted-strong:var(--ink-2);
+      --line:#ece3ec; --edge:var(--ink); --soft:#f7f1f6; --accent:var(--zoom);
+      --good:var(--ink); --good-bg:var(--meeting); --warn:var(--ink); --warn-bg:var(--giraffe);
+      /* One height for everything in the header row, so the three controls
+         line up as a single strip. */
+      --control-h:48px;
+      --tick:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3L13 4.5' fill='none' stroke='%231b1340' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     }
     * { box-sizing:border-box; }
+    /* Selection and caret ship as browser defaults that belong to no palette;
+       tinting them from the accent is the cheapest way the page stops looking
+       assembled. The alpha keeps it legible over the location tints. */
+    ::selection { background:var(--poison); color:var(--ink); }
+    input,textarea,select { caret-color:var(--accent); }
     body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
     .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .status-switch { display:inline-flex; gap:0; border:1px solid var(--line); border-radius:999px;
-                     overflow:hidden; background:var(--soft); }
-    .status-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; cursor:pointer;
-                  border:0; border-radius:0; background:transparent; color:var(--muted); font-size:14px; }
-    .status-btn.active { background:var(--accent); color:#fff; }
+    /* Every control carries a 2px ink edge, so it reads as pressable before
+       anyone presses it. */
+    .status-switch { display:inline-flex; gap:0; height:var(--control-h); border:2px solid var(--edge); border-radius:14px;
+                     overflow:hidden; background:var(--card); }
+    .status-btn { display:inline-flex; align-items:center; gap:6px; height:100%; padding:0 16px; cursor:pointer;
+                  border:0; border-left:2px solid var(--edge); border-radius:0; background:transparent;
+                  color:var(--ink); font-size:15px; font-weight:600; }
+    .status-btn:first-child { border-left:0; }
+    /* Location is the one choice that takes its own colour, the same one the
+       page is tinted with, instead of the usual yellow. */
+    .status-btn.active { background:var(--fluff); color:var(--ink); }
+    .status-btn.active:first-child { background:var(--giraffe); }
     .status-btn:disabled { cursor:default; opacity:1; }
 
     /* Where he is should be obvious before reading a word. */
-    body.at-hospital { background:#e6f2fb; }
-    body.at-home { background:#fdf7e3; }
+    body.at-hospital { background:var(--hospital-tint); }
+    body.at-home { background:var(--home-tint); }
     .wellness-scale { display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted); margin-top:8px; flex-wrap:wrap; }
     .wellness-chip { display:inline-flex; align-items:center; gap:4px; }
-    .topline-right { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    .lang-tabs { display:flex; gap:0; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--soft); }
-    .lang-tab { padding:9px 16px; font-size:14px; border:0; border-radius:0; cursor:pointer; background:transparent; color:var(--muted); }
-    .lang-tab.active { background:var(--accent); color:#fff; }
-    h1 { margin:0 0 4px; font-size:28px; }
+    .topline-right { display:flex; align-items:center; justify-content:flex-end; gap:8px;
+                     flex-wrap:wrap; min-width:0; margin-bottom:12px; }
+    /* Which language you read in is a preference, not a fact about him, so
+       the chosen tab lifts off the track as a white pill instead of taking
+       the solid fill - that weight belongs to where he is, next to it. */
+    .status-switch { margin-right:8px; }
+    .lang-tabs { display:flex; gap:0; height:var(--control-h); border:2px solid var(--edge); border-radius:999px;
+                 overflow:hidden; background:var(--card); }
+    /* Weight stays put across states so the row never reflows when you switch. */
+    .lang-tab { height:100%; padding:0 14px; min-width:48px; font-size:14px; font-weight:700; line-height:1.25;
+                cursor:pointer; border:0; border-radius:0; background:transparent; color:var(--ink);
+                transition:background .15s ease, color .15s ease; }
+    .lang-tab:hover:not(.active) { background:var(--soft); }
+    .lang-tab.active { background:var(--ink); color:var(--poison); }
+    .lang-tab:focus-visible { outline:3px solid var(--zoom); outline-offset:2px; }
+    @media (prefers-reduced-motion:reduce){ .lang-tab{transition:none} }
+    /* The wordmark borrows the palette's lettering; everything people read
+       stays in the system face, which also covers Chinese. */
+    h1 { margin:0 0 4px; font-family:Bungee,system-ui,sans-serif; font-weight:400; font-size:30px;
+         line-height:1.1; color:var(--zoom); }
+    /* Busy one step darker: the swatch itself is 2.5:1 on the hospital tint,
+       under the 3:1 large-text floor. */
+    .wordmark-accent { color:#e3368b; }
     h2 { font-size:18px; margin:20px 0; }
     .subtitle,.meta,.footer-note { color:var(--muted); }
     .subtitle { margin-bottom:22px; }
-    .live { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:999px; font-size:14px; background:var(--warn-bg); color:var(--warn); height:fit-content; }
+    .live { box-sizing:border-box; display:inline-flex; align-items:center; gap:7px; height:var(--control-h); padding:0 16px; border-radius:999px; font-size:14px;
+            font-weight:700; background:var(--warn-bg); color:var(--warn); border:2px solid var(--edge); }
     .live.connected { background:var(--good-bg); color:var(--good); }
     /* He is asleep right now - a state, not an event, so it belongs up here
        beside where he is rather than only in the timeline. */
     /* The one cell in this table that is a length rather than a tally. */
     .counts-table td.slept { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    /* A refused meal is the loudest thing in a day's timeline. */
+    .entry-warn { display:inline-block; padding:0 9px; border-radius:999px; background:var(--busy); color:var(--ink); }
     .dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
-    /* The page tint changes with location, so this banner is separated by its
-       border and shadow, not by the fill alone - a pale wash can't carry it. */
-    .access-card { display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-                   background:#cdeed8; border:1px solid #9ed6b4; border-left:5px solid #15803d;
-                   box-shadow:0 1px 3px rgba(20,83,45,.10); }
-    .access-card h2 { margin:0; color:#14532d; }
+    .card { background:var(--card); border-radius:20px; padding:18px; margin-bottom:18px;
+            box-shadow:0 1px 2px rgba(27,19,64,.08), 0 8px 24px rgba(27,19,64,.06); }
+    /* The white card and its shadow already lift this off the tinted page, so
+       it no longer needs a coloured stripe down its side. */
+    .access-card { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+    .access-card h2 { margin:0; }
     .access-card .actions { margin-top:0; gap:10px; }
-    .access-btn { display:inline-block; text-decoration:none; padding:12px 20px; border-radius:10px;
-                  font-size:15px; font-weight:600; background:#15803d; color:#fff; border:1px solid #15803d; }
-    .access-btn:hover { background:#166534; border-color:#166534; }
-    .access-btn.muted { background:#f9fefb; color:#166534; border-color:#8cc9a5; font-weight:500; }
-    .access-btn.muted:hover { background:#fff; }
+    .access-btn { display:inline-block; text-decoration:none; padding:13px 20px; line-height:1.3;
+                  border-radius:14px; font-size:16px; font-weight:700; background:var(--zoom); color:#fff;
+                  border:2px solid var(--zoom); box-shadow:0 3px 10px rgba(63,34,236,.28); }
+    .access-btn:hover { background:#2f14d0; border-color:#2f14d0; }
+    .access-btn.muted { background:var(--card); color:var(--ink); border-color:var(--edge); box-shadow:none; }
+    .access-btn.muted:hover { background:var(--soft); }
+    .access-btn:focus-visible { outline:3px solid var(--zoom); outline-offset:2px; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .full { grid-column:1/-1; }
-    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
-    input,select,textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+    label { display:block; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+    input,select,textarea { width:100%; padding:10px 12px; border:2px solid var(--edge); border-radius:12px; font:inherit; color:var(--ink); }
     textarea { min-height:76px; resize:vertical; }
     button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
-    .primary { background:var(--accent); color:#fff; }
-    .secondary { background:var(--soft); color:var(--text); }
+    .primary { background:var(--zoom); color:#fff; border:2px solid var(--zoom); font-weight:700; }
+    .secondary { background:var(--card); color:var(--ink); border:2px solid var(--edge); font-weight:600; }
+    .secondary:hover { background:var(--soft); }
+    button:focus-visible { outline:3px solid var(--zoom); outline-offset:2px; }
     .actions,.view-tabs,.period-controls,.timeline-filters { display:flex; gap:8px; flex-wrap:wrap; }
     .actions { margin-top:14px; }
     .toolbar { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-    .tab.active,.filter-chip.active { background:var(--accent); color:#fff; }
+    /* Chosen = yellow plus a drawn tick, so it never rests on colour alone. */
+    .tab.active,.filter-chip.active,.status-btn.active { font-weight:700; }
+    .tab.active,.filter-chip.active { background:var(--poison); color:var(--ink); }
+    .tab.active::before,.filter-chip.active::before,.status-btn.active::before {
+      content:""; display:inline-block; width:14px; height:14px; margin-right:6px; vertical-align:-2px;
+      background:var(--tick) center/contain no-repeat; }
+    .status-btn.active::before { margin-right:0; }
+    .tab.active:hover,.filter-chip.active:hover { background:var(--poison); }
+    .period-controls > button.secondary { min-height:46px; }
+    .period-controls > button.secondary:not([data-i18n]) { min-width:46px; font-size:20px; line-height:1; }
     .period-controls { align-items:center; }
     .period-label { min-width:180px; text-align:center; font-weight:700; }
     .summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; }
-    .summary-box { border:1px solid var(--line); border-radius:12px; padding:12px; }
-    .summary-label { color:var(--muted); font-size:14px; margin-bottom:5px; }
+    .summary-box { border-radius:16px; padding:12px 14px; }
+    .summary-box:nth-child(1) { background:var(--giraffe-soft); }
+    .summary-box:nth-child(2) { background:var(--meeting-soft); }
+    .summary-box:nth-child(3) { background:var(--zoom-soft); }
+    .summary-box:nth-child(4) { background:var(--busy-soft); }
+    /* Zero is information too, but it should not shout as loud as "2 meals". */
+    .summary-box.zero { background:var(--soft); }
+    .summary-box.zero .summary-value { color:var(--ink-2); font-weight:600; }
+    .summary-label { color:var(--ink); font-weight:600; font-size:14px; margin-bottom:5px; }
     .summary-value { font-size:24px; font-weight:700; }
     .chart-wrap { overflow-x:auto; }
     #tempChart, #wellnessChart { width:100%; min-width:660px; height:auto; display:block; }
@@ -113,20 +189,25 @@
     .empty { text-align:center; color:var(--muted); padding:24px 0; }
     /* A note is standing information, not an event, so it stays put at the top
        instead of scrolling away down the timeline with everything else. */
-    .note-card { border-left:5px solid #b45309; background:#fffbeb; border-color:#fde68a; }
+    /* Mint, never a location colour: a card tinted like the page vanished into
+       it whenever the tint matched where he was. Mint already means calm
+       information (it is the Live pill), so notes read as reference, not alarm. */
+    .note-card { background:var(--meeting-soft); border:2px solid var(--edge); }
     /* The same fold control as 重要記事, in the page's neutral palette. */
     .fold-heading { margin:22px 0 12px; }
     .fold-head { display:flex; align-items:center; gap:10px; width:100%; padding:2px 0;
                  background:none; border:0; font:inherit; font-size:18px; font-weight:700;
                  color:var(--text); text-align:left; cursor:pointer; }
     .fold-count { font-weight:500; font-size:15px; color:var(--muted); }
+    /* Opening a section is not the page's main action, so it is the outlined
+       button, not the blue one. */
     .fold-action { margin-left:auto; display:inline-flex; align-items:center; gap:8px;
-                   border:0; border-radius:999px; padding:10px 20px;
-                   background:var(--accent); font-size:17px; font-weight:600; color:#fff;
-                   white-space:nowrap; box-shadow:0 1px 2px rgba(31,41,55,.25); }
-    .fold-head:hover .fold-action { background:#1f2937; }
+                   border:2px solid var(--edge); border-radius:14px; padding:9px 18px;
+                   background:var(--card); font-size:16px; font-weight:700; color:var(--ink);
+                   white-space:nowrap; }
+    .fold-head:hover .fold-action { background:var(--soft); }
     .fold-head:focus-visible { outline:none; }
-    .fold-head:focus-visible .fold-action { outline:3px solid var(--accent); outline-offset:3px; }
+    .fold-head:focus-visible .fold-action { outline:3px solid var(--zoom); outline-offset:3px; }
     .fold-arrow { font-size:13px; transition:transform .15s ease; }
     .fold-head.folded .fold-arrow { transform:rotate(-90deg); }
     @media (prefers-reduced-motion:reduce){ .fold-arrow{transition:none} }
@@ -134,39 +215,48 @@
     .note-heading { margin:0; }
     .note-head { display:flex; align-items:center; gap:10px; width:100%; padding:2px 0;
                  background:none; border:0; font:inherit; font-size:19px; font-weight:700;
-                 color:#92400e; text-align:left; cursor:pointer; }
-    .note-count { font-weight:500; font-size:15px; opacity:.85; }
+                 color:var(--ink); text-align:left; cursor:pointer; }
+    .note-count { display:inline-grid; place-items:center; min-width:28px; height:28px; padding:0 8px;
+                  border-radius:999px; background:var(--ink); color:var(--poison); font-weight:800; font-size:14px; }
     /* A word, not a chevron: the control has to be readable at a glance and
        big enough to hit without aiming. */
     .note-action { margin-left:auto; display:inline-flex; align-items:center; gap:8px;
-                   border:0; border-radius:999px; padding:10px 20px;
-                   background:#b45309; font-size:17px; font-weight:600; color:#fff;
-                   white-space:nowrap; box-shadow:0 1px 2px rgba(146,64,14,.3); }
-    .note-head:hover .note-action { background:#92400e; }
+                   border:2px solid var(--edge); border-radius:14px; padding:9px 18px;
+                   background:var(--card); font-size:16px; font-weight:700; color:var(--ink);
+                   white-space:nowrap; }
+    .note-head:hover .note-action { background:var(--soft); }
     .note-head:focus-visible { outline:none; }
-    .note-head:focus-visible .note-action { outline:3px solid #92400e; outline-offset:3px; }
+    .note-head:focus-visible .note-action { outline:3px solid var(--zoom); outline-offset:3px; }
     .note-arrow { font-size:13px; transition:transform .15s ease; }
     .note-card.collapsed .note-arrow { transform:rotate(-90deg); }
     .note-card.collapsed .note-body { display:none; }
     .note-body { margin-top:12px; }
-    .note { padding:10px 0; border-top:1px solid #fde68a; }
+    .note { padding:10px 0; border-top:1px solid rgba(27,19,64,.14); }
     .note:first-child { border-top:0; padding-top:0; }
-    .note-when { font-size:14px; color:#92400e; margin-bottom:3px; }
+    .note-when { font-size:14px; font-weight:700; color:var(--ink-2); margin-bottom:3px; }
     .note-text { font-size:17px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
     /* A long note is clamped rather than pushing the page down; tapping it
        opens the rest. */
     .note-text.clamped { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical;
                          overflow:hidden; }
     .note-more { margin-top:8px; display:inline-flex; align-items:center; gap:7px;
-                 border:2px solid #b45309; border-radius:999px; padding:8px 16px;
-                 background:#fff; font:inherit; font-size:16px; font-weight:600;
-                 color:#92400e; cursor:pointer; }
-    .note-more:hover { background:#fef3c7; }
-    .note-more:focus-visible { outline:2px solid #92400e; outline-offset:2px; }
+                 border:2px solid var(--edge); border-radius:999px; padding:8px 16px;
+                 background:var(--card); font:inherit; font-size:16px; font-weight:700;
+                 color:var(--ink); cursor:pointer; }
+    .note-more:hover { background:var(--soft); }
+    .note-more:focus-visible { outline:3px solid var(--zoom); outline-offset:2px; }
     .note-toggle { margin-top:14px; }
     @media (prefers-reduced-motion:reduce){ .note-arrow{transition:none} }
-    .error { color:#991b1b; margin-top:10px; font-size:13px; }
+    .error { color:#a3155f; font-weight:600; margin-top:10px; font-size:13px; }
     .footer-note { font-size:12px; line-height:1.5; margin-top:14px; }
+    @media(max-width:640px){
+      .topline-right{width:100%;justify-content:flex-start;margin-bottom:14px}
+      /* Where he is earns the full width of a phone; the rest shares a row. */
+      .status-switch{width:100%;margin-right:0}
+      .status-btn{flex:1;justify-content:center;padding:0 12px}
+      .lang-tab{padding:0 15px}
+      .live{margin-left:auto}
+    }
     @media(max-width:720px){
       .grid{grid-template-columns:1fr}.full{grid-column:auto}
       .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -179,14 +269,14 @@
 <div class="container">
   <div class="topline">
     <div>
-      <h1 data-i18n="appTitle"></h1>
+      <h1 data-i18n-wordmark="appWordmark"></h1>
     </div>
     <div class="topline-right">
       <div id="statusSwitch" class="status-switch" role="group" aria-label="Location"></div>
       <div class="lang-tabs" role="group" aria-label="Language">
-        <button type="button" class="secondary lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
-        <button type="button" class="secondary lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
-        <button type="button" class="secondary lang-tab" data-lang="id" onclick="I18N.setLang('id')">ID</button>
+        <button type="button" class="lang-tab" data-lang="en" onclick="I18N.setLang('en')">EN</button>
+        <button type="button" class="lang-tab" data-lang="zh" onclick="I18N.setLang('zh')">中文</button>
+        <button type="button" class="lang-tab" data-lang="id" onclick="I18N.setLang('id')">ID</button>
       </div>
       <div id="liveStatus" class="live"><span class="dot"></span><span id="liveText">Connecting…</span></div>
     </div>
@@ -312,12 +402,22 @@ function entryIcon(record){
 // Amount and detail were two boxes nobody could tell apart - half the food
 // entries used one, half used the other. On the way out they are simply one
 // line, and records that filled both still read correctly.
+// "Lunch — Meat, Veggie · Moderate". A refused meal keeps the warning colour
+// so it stands out in a day of ordinary entries.
+function foodHtml(f){
+  const items=f.items.map(i=>I18N.t("food"+i)).join(I18N.lang==="zh"?"、":", ");
+  const qty=`<span class="entry-value${f.quantity==="None"?" entry-warn":""}">${escapeHtml(I18N.t("qty"+f.quantity))}</span>`;
+  return `<span class="entry-value">${escapeHtml(I18N.t("meal"+f.meal))}</span>`
+       +(items?` — ${escapeHtml(items)}`:"")+` · ${qty}`;
+}
+
 function entryBody(record){
   const strong = text => `<span class="entry-value">${escapeHtml(text)}</span>`;
   const parts = [];
 
   if(record.type==="Wellness") parts.push(strong(I18N.wellnessLabel(record.amount)));
   else if(record.type==="Location") parts.push(strong(I18N.locationLabel(record.amount)));
+  else if(I18N.food(record.amount)) parts.push(foodHtml(I18N.food(record.amount)));
   else if(record.amount) parts.push(strong(record.amount));
 
   const words=[record.detail,record.notes].filter(Boolean).join("\n");
@@ -549,6 +649,9 @@ function renderSummary(){
   $("medicineCount").textContent=count("Medicine");
   $("ivCount").textContent=count("IV / Treatment");
   $("tempCount").textContent=count("Temperature");
+  document.querySelectorAll(".summary-box").forEach(box=>{
+    box.classList.toggle("zero", box.querySelector(".summary-value").textContent==="0");
+  });
 }
 
 function extractTemperature(entry){
@@ -591,20 +694,20 @@ function renderTemperatureChart(){
   for(let i=0;i<=5;i++){
     const value=max-(i/5)*(max-min);
     const yy=T+(i/5)*CH;
-    output.push(`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#e5e7eb"/>`);
-    output.push(`<text x="${L-10}" y="${yy+4}" text-anchor="end" font-size="14" fill="#6b7280">${value.toFixed(1)}°</text>`);
+    output.push(`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#ece3ec"/>`);
+    output.push(`<text x="${L-10}" y="${yy+4}" text-anchor="end" font-size="14" fill="#4a3f6b">${value.toFixed(1)}°</text>`);
   }
 
   if(38>=min && 38<=max){
     const feverY=y(38);
-    output.push(`<line x1="${L}" y1="${feverY}" x2="${W-R}" y2="${feverY}" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="5 5"/>`);
-    output.push(`<text x="${W-R}" y="${feverY-6}" text-anchor="end" font-size="13" fill="#6b7280">38°C</text>`);
+    output.push(`<line x1="${L}" y1="${feverY}" x2="${W-R}" y2="${feverY}" stroke="#fa58a7" stroke-width="2" stroke-dasharray="6 5"/>`);
+    output.push(`<text x="${W-R}" y="${feverY-6}" text-anchor="end" font-size="13" font-weight="700" fill="#a3155f">38°C</text>`);
   }
 
-  output.push(`<polyline points="${points.map((p,i)=>`${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
+  output.push(`<polyline points="${points.map((p,i)=>`${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="#3f22ec" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
 
   points.forEach((p,i)=>{
-    output.push(`<circle cx="${x(i)}" cy="${y(p.value)}" r="5" fill="#374151"><title>${p.date} ${p.time} — ${p.value.toFixed(1)}°C</title></circle>`);
+    output.push(`<circle cx="${x(i)}" cy="${y(p.value)}" r="5" fill="#3f22ec" stroke="#fff" stroke-width="2"><title>${p.date} ${p.time} — ${p.value.toFixed(1)}°C</title></circle>`);
   });
 
   const step=Math.max(1,Math.ceil(points.length/7));
@@ -616,7 +719,7 @@ function renderTemperatureChart(){
       ? I18N.displayTimeShort(p.time)
       : parseLocalDate(p.date).toLocaleDateString(I18N.locale(),{month:"short",day:"numeric"});
 
-    output.push(`<text x="${x(i)}" y="${H-18}" text-anchor="middle" font-size="14" fill="#6b7280">${escapeHtml(label)}</text>`);
+    output.push(`<text x="${x(i)}" y="${H-18}" text-anchor="middle" font-size="14" fill="#4a3f6b">${escapeHtml(label)}</text>`);
   });
 
   $("tempChart").innerHTML=output.join("");
@@ -708,15 +811,15 @@ function renderWellnessChart(){
 
   for(let v=5;v>=1;v--){
     const yy=y(v);
-    out.push(`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#e5e7eb"/>`);
+    out.push(`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#ece3ec"/>`);
     out.push(`<text x="${L-10}" y="${yy+7}" text-anchor="end" font-size="21">${I18N.wellnessEmoji(v)}</text>`);
   }
 
-  out.push(`<polyline points="${points.map((p,i)=>`${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="#374151" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
+  out.push(`<polyline points="${points.map((p,i)=>`${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="#3f22ec" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
 
   points.forEach((p,i)=>{
     const tip=`${p.date} ${p.time} — ${I18N.wellnessLabel(p.value)}${p.detail?" · "+p.detail:""}`;
-    out.push(`<circle cx="${x(i)}" cy="${y(p.value)}" r="5" fill="#374151"><title>${escapeHtml(tip)}</title></circle>`);
+    out.push(`<circle cx="${x(i)}" cy="${y(p.value)}" r="5" fill="#3f22ec" stroke="#fff" stroke-width="2"><title>${escapeHtml(tip)}</title></circle>`);
   });
 
   const step=Math.max(1,Math.ceil(points.length/7));
@@ -725,7 +828,7 @@ function renderWellnessChart(){
     const label=currentView==="today"
       ? I18N.displayTimeShort(p.time)
       : parseLocalDate(p.date).toLocaleDateString(I18N.locale(),{month:"short",day:"numeric"});
-    out.push(`<text x="${x(i)}" y="${H-14}" text-anchor="middle" font-size="14" fill="#6b7280">${escapeHtml(label)}</text>`);
+    out.push(`<text x="${x(i)}" y="${H-14}" text-anchor="middle" font-size="14" fill="#4a3f6b">${escapeHtml(label)}</text>`);
   });
 
   $("wellnessChart").innerHTML=out.join("");
@@ -941,7 +1044,7 @@ function exportCSV(){
   const headers=I18N.t("csvHeaders");
   const rows=[...records]
     .sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
-    .map(r=>[r.date,r.time,r.type,r.amount,r.detail,r.notes,r.createdAt]);
+    .map(r=>[r.date,r.time,r.type,I18N.foodText(r.amount)??r.amount,r.detail,r.notes,r.createdAt]);
 
   const csv=[headers,...rows].map(row=>row.map(csvEscape).join(",")).join("\n");
   // Excel and Numbers read a CSV as Latin-1 unless it opens with a byte order
@@ -972,7 +1075,14 @@ function applyRole(){
   renderStatusBanner();
 }
 
-window.onLanguageChange=()=>{ applyRole(); renderAll(); };
+// The live pill is only written when the socket opens or drops, so a language
+// switch has to rewrite it too or it keeps the old language until a reconnect.
+function renderLiveText(){
+  const connected=$("liveStatus").classList.contains("connected");
+  $("liveText").textContent=I18N.t(connected?"live":ws?"reconnecting":"connecting");
+}
+
+window.onLanguageChange=()=>{ applyRole(); renderAll(); renderLiveText(); };
 I18N.applyStatic();
 
 renderAll();

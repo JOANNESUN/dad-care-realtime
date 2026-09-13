@@ -10,6 +10,8 @@
       pageTitle: "Dad Care Log",
       editorPageTitle: "Dad Care Log — Editor",
       appTitle: "Dad Care Log",
+      // [ ] marks the word the wordmark colours pink.
+      appWordmark: "Dad [Care] Log",
 
       connecting: "Connecting…",
       live: "Live",
@@ -104,6 +106,16 @@
       tempHigh: "High fever",
       w5: "Very good", w4: "Good", w3: "Okay", w2: "Not great", w1: "Poor",
       sumWellness: "Wellness check-ins",
+      labelMeal: "Which meal?",
+      labelFoods: "What did he eat?",
+      labelQuantity: "How much?",
+      labelDetailFood: "Anything to add?",
+      optional: "optional",
+      mealBreakfast: "Breakfast", mealLunch: "Lunch", mealDinner: "Dinner", mealSupplement: "Supplement",
+      foodMeat: "Meat", foodVeggie: "Veggie", foodFruit: "Fruit",
+      qtyNone: "Barely any", qtyLittle: "A little", qtyModerate: "Moderate", qtyMore: "More than usual",
+      errMeal: "Choose which meal.",
+      errQuantity: "Choose how much he ate.",
       csvHeaders: ["Date", "Time", "Type", "Amount / Dose", "Details", "Notes", "Created At"],
     },
 
@@ -111,6 +123,7 @@
       pageTitle: "爸爸照護記錄",
       editorPageTitle: "爸爸照護記錄 — 編輯",
       appTitle: "爸爸照護記錄",
+      appWordmark: "爸爸[照護]記錄",
 
       connecting: "連線中…",
       live: "即時",
@@ -202,6 +215,16 @@
       tempHigh: "高燒",
       w5: "很好", w4: "還好", w3: "普通", w2: "不太好", w1: "很不好",
       sumWellness: "狀態記錄",
+      labelMeal: "哪一餐？",
+      labelFoods: "吃了什麼？",
+      labelQuantity: "吃了多少？",
+      labelDetailFood: "其他補充？",
+      optional: "選填",
+      mealBreakfast: "早餐", mealLunch: "午餐", mealDinner: "晚餐", mealSupplement: "營養補充",
+      foodMeat: "肉類", foodVeggie: "蔬菜", foodFruit: "水果",
+      qtyNone: "幾乎沒吃", qtyLittle: "吃一點", qtyModerate: "適量", qtyMore: "比平常多",
+      errMeal: "請選擇哪一餐。",
+      errQuantity: "請選擇吃了多少。",
       csvHeaders: ["日期", "時間", "類型", "用量 / 劑量", "詳情", "備註", "建立時間"],
     },
 
@@ -209,6 +232,7 @@
       pageTitle: "Catatan Perawatan Ayah",
       editorPageTitle: "Catatan Perawatan Ayah — Editor",
       appTitle: "Catatan Perawatan Ayah",
+      appWordmark: "Catatan [Perawatan] Ayah",
 
       connecting: "Menghubungkan…",
       live: "Langsung",
@@ -303,6 +327,16 @@
       tempHigh: "Demam tinggi",
       w5: "Sangat baik", w4: "Baik", w3: "Cukup", w2: "Kurang baik", w1: "Buruk",
       sumWellness: "Catatan kondisi",
+      labelMeal: "Waktu makan?",
+      labelFoods: "Apa yang beliau makan?",
+      labelQuantity: "Seberapa banyak?",
+      labelDetailFood: "Ada tambahan?",
+      optional: "opsional",
+      mealBreakfast: "Sarapan", mealLunch: "Makan siang", mealDinner: "Makan malam", mealSupplement: "Suplemen",
+      foodMeat: "Daging", foodVeggie: "Sayur", foodFruit: "Buah",
+      qtyNone: "Hampir tidak", qtyLittle: "Sedikit", qtyModerate: "Sedang", qtyMore: "Lebih dari biasa",
+      errMeal: "Pilih waktu makan.",
+      errQuantity: "Pilih seberapa banyak beliau makan.",
       csvHeaders: ["Tanggal", "Waktu", "Jenis", "Jumlah / Dosis", "Detail", "Catatan", "Dibuat Pada"],
     },
   };
@@ -443,6 +477,31 @@
       }[storedType] || "\u{1F4DD}";
     },
 
+    // "Lunch|Meat,Veggie|Moderate" -> its three parts, or null for a meal
+    // written as free text before the picker existed.
+    food(amount) {
+      const m = /^(Breakfast|Lunch|Dinner|Supplement)\|((?:Meat|Veggie|Fruit)(?:,(?:Meat|Veggie|Fruit))*)?\|(None|Little|Moderate|More)$/
+        .exec(String(amount || ""));
+      return m ? { meal: m[1], items: m[2] ? m[2].split(",") : [], quantity: m[3] } : null;
+    },
+
+    mealEmoji(meal) {
+      return { Breakfast: "\u{1F305}", Lunch: "\u2600\uFE0F", Dinner: "\u{1F319}", Supplement: "\u{1F964}" }[meal] || "";
+    },
+
+    foodEmoji(item) {
+      return { Meat: "\u{1F356}", Veggie: "\u{1F96C}", Fruit: "\u{1F34E}" }[item] || "";
+    },
+
+    // Plain text, for places that cannot take markup: the CSV and titles.
+    foodText(amount) {
+      const f = I18N.food(amount);
+      if (!f) return null;
+      const items = f.items.map(i => I18N.t("food" + i)).join(lang === "zh" ? "、" : ", ");
+      const head = I18N.t("meal" + f.meal) + (items ? ` — ${items}` : "");
+      return `${head} · ${I18N.t("qty" + f.quantity)}`;
+    },
+
     locationEmoji(place) {
       return place === "Hospital" ? "\u{1F3E5}" : "\u{1F3E0}";
     },
@@ -480,6 +539,17 @@
 
       document.querySelectorAll("[data-i18n]").forEach(el => {
         el.textContent = I18N.t(el.dataset.i18n);
+      });
+
+      // Built from text nodes, never innerHTML, so a translation cannot inject markup.
+      document.querySelectorAll("[data-i18n-wordmark]").forEach(el => {
+        el.replaceChildren(...I18N.t(el.dataset.i18nWordmark).split(/(\[[^\]]+\])/).filter(Boolean).map(part => {
+          if (!part.startsWith("[")) return document.createTextNode(part);
+          const span = document.createElement("span");
+          span.className = "wordmark-accent";
+          span.textContent = part.slice(1, -1);
+          return span;
+        }));
       });
 
       document.querySelectorAll("[data-i18n-title]").forEach(el => {
