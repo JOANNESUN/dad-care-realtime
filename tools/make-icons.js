@@ -6,10 +6,11 @@ const fs = require("fs");
 const path = require("path");
 
 // Colours from the family palette, one per part of the face, so the icon
-// matches the app: Zoom blue behind, Poison eye, Meeting tick, Busy smile.
+// matches the app: a slightly deeper blue than Zoom behind, Poison eye,
+// Meeting tick, Busy smile.
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const COLOURS = {
-  background: hex("#3f22ec"),
+  background: hex("#2337ea"),
   eye: hex("#dff700"),
   check: hex("#03e29d"),
   mouth: hex("#fa58a7"),
