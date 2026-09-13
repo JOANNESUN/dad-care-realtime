@@ -39,7 +39,7 @@
     input,textarea,select { caret-color:var(--accent); }
     body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     .container { max-width:980px; margin:0 auto; padding:24px 16px 48px; }
-    .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .topline { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
     h1 { margin:0 0 4px; font-family:Bungee,system-ui,sans-serif; font-weight:400; font-size:30px; line-height:1.1; color:var(--zoom); }
     /* Busy one step darker: the swatch itself is 2.5:1 on the hospital tint,
        under the 3:1 large-text floor. */
@@ -48,11 +48,23 @@
     .subtitle,.meta,.footer-note { color:var(--muted); }
     .card { background:var(--card); border-radius:20px; padding:18px; margin-bottom:18px;
             box-shadow:0 1px 2px rgba(27,19,64,.08), 0 8px 24px rgba(27,19,64,.06); }
+    /* min-width:0 lets a grid cell shrink below its content's natural width;
+       without it a wide control pushes its column out past the card. */
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .grid > * { min-width:0; }
     .full { grid-column:1/-1; }
     label { display:block; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:6px; }
     input,select,textarea { width:100%; padding:11px 12px; border:2px solid var(--edge); color:var(--ink);
-                            border-radius:10px; font:inherit; font-size:17px; }
+                            border-radius:10px; font:inherit; font-size:17px; background:var(--card); }
+    /* iOS Safari draws date and time fields as native grey pills with their own
+       minimum width, which ignores width:100% and runs them off the edge of
+       the card on an iPhone. Dropping the native appearance gives them back to
+       the page's box model and styling. */
+    input[type="date"], input[type="time"] {
+      -webkit-appearance:none; appearance:none; display:block;
+      min-width:0; max-width:100%; min-height:50px; text-align:left; }
+    input[type="date"]::-webkit-date-and-time-value,
+    input[type="time"]::-webkit-date-and-time-value { text-align:left; margin:0; }
     textarea { min-height:92px; resize:vertical; line-height:1.5; }
     button { border:0; border-radius:10px; padding:10px 14px; font:inherit; cursor:pointer; }
     button:disabled { opacity:.55; cursor:not-allowed; }
